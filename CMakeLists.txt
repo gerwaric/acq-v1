@@ -44,8 +44,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui NetworkAuth Qml Quick Sql)
 
 qt_standard_project_setup(REQUIRES 6.9)
 
-add_subdirectory(qml)
+# The main target is defined in src and then referenced in qml.
 add_subdirectory(src)
-
-#enable_testing()
-#add_subdirectory(libs/tests)
+add_subdirectory(qml)

@@ -94,19 +94,7 @@ qt_add_executable(acquisition
     ratelimit/ratelimitpolicy.h
 )
 
-qt_add_qml_module(acquisition
-    URI "Acquisition"
-    OUTPUT_DIRECTORY "Acquisition"
-    IMPORTS "QtQuick"
-    QML_FILES
-        main.qml
-)
-
-
-target_include_directories(acquisition
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_include_directories(acquisition PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(acquisition
     PRIVATE
