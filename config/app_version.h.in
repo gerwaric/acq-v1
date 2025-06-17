@@ -1,0 +1,20 @@
+// Copyright (C) 2025 Tom Holz.
+// SPDX-License-Identifier: GPL-3.0-only
+
+#pragma once
+
+#define APP_NAME            "@APP_NAME@"
+#define APP_VERSION_STRING  "@APP_VERSION_STRING@"
+#define APP_VERSION_MAJOR   @APP_VERSION_MAJOR@
+#define APP_VERSION_MINOR   @APP_VERSION_MINOR@
+#define APP_VERSION_PATCH   @APP_VERSION_PATCH@
+#define APP_VERSION_TWEAK   @APP_VERSION_TWEAK@
+#define APP_VERSION_TAG     "@APP_VERSION_TAG@"
+
+#define APP_PUBLISHER       "@APP_PUBLISHER@"
+#define APP_PUBLISHER_EMAIL "@APP_PUBLISHER_EMAIL@"
+#define APP_COPYRIGHT       "@APP_COPYRIGHT@"
+#define APP_TRADEMARK       "@APP_TRADEMARK@"
+
+#define APP_USER_AGENT      "@APP_NAME@/@APP_VERSION_STRING@ (contact: @APP_PUBLISHER_EMAIL@)"
+#define APP_ICON_PATH       ""
