@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <glaze/glaze.hpp>
+
 #include <QString>
 
 #include <optional>
@@ -33,3 +35,22 @@ namespace poe {
     };
 
 } // namespace poe
+
+template<>
+struct glz::meta<poe::ItemFilter>
+{
+    // clang-format off
+    using T = poe::ItemFilter;
+    static constexpr auto value = glz::object(
+        "id",          &T::id,
+        "filter_name", &T::filter_name,
+        "realm",       &T::realm,
+        "description", &T::description,
+        "version",     &T::version,
+        "type",        &T::type,
+        "public",      &T::public_,
+        "filter",      &T::filter,
+        "validation",  &T::validation
+        );
+    // clang-format on
+};

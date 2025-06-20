@@ -24,20 +24,21 @@ class RateLimiter : public QObject
 {
     Q_OBJECT
 
+    using Callback = std::function<void(QNetworkReply *)>;
+
 public:
     // Create a rate limiter.
     explicit RateLimiter(NetworkManager &network_manager, QObject *parent = nullptr);
 
     ~RateLimiter();
 
-    // Submit a request-callback pair to the rate limiter. The caller is responsible
-    // for freeing the RateLimitedReply object with deleteLater() when the completed()
-    // signal has been emitted.
-    RateLimitedReply *Submit(const QString &endpoint, QNetworkRequest network_request);
-
 public slots:
     // Used by the GUI to request a manual refresh.
     void OnUpdateRequested();
+
+    void makeRequest(const QString &endpoint,
+                     const QNetworkRequest &request,
+                     std::function<void(QNetworkReply *)> callback);
 
 signals:
     // Emitted when one of the policy managers has signalled a policy update.
@@ -66,6 +67,11 @@ private slots:
     void OnViolation(const QString &policy_name);
 
 private:
+    // Submit a request-callback pair to the rate limiter. The caller is responsible
+    // for freeing the RateLimitedReply object with deleteLater() when the completed()
+    // signal has been emitted.
+    RateLimitedReply *Submit(const QString &endpoint, QNetworkRequest network_request);
+
     // Process the first request for an endpoint we haven't encountered before.
     void SetupEndpoint(const QString &endpoint,
                        QNetworkRequest network_request,

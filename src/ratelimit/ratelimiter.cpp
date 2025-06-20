@@ -118,6 +118,19 @@ RateLimiter::RateLimiter(NetworkManager &network_manager, QObject *parent)
 
 RateLimiter::~RateLimiter() {}
 
+void RateLimiter::makeRequest(const QString &endpoint,
+                              const QNetworkRequest &request,
+                              std::function<void(QNetworkReply *)> callback)
+{
+    auto reply = Submit(endpoint, request);
+    connect(reply, &RateLimitedReply::complete, QObject::sender(), [=](QNetworkReply *network_reply) {
+        // Make the callback and then delete the reply objecgts.
+        callback(network_reply);
+        network_reply->deleteLater();
+        reply->deleteLater();
+    });
+}
+
 RateLimitedReply *RateLimiter::Submit(const QString &endpoint, QNetworkRequest network_request)
 {
     spdlog::trace("RateLimiter::Submit() entered");
@@ -142,7 +155,7 @@ RateLimitedReply *RateLimiter::Submit(const QString &endpoint, QNetworkRequest n
         // policy can apply to multiple managers.
         spdlog::debug("Unknown endpoint encountered: {}", endpoint);
         SetupEndpoint(endpoint, network_request, reply);
-    };
+    }
     return reply;
 }
 
@@ -165,7 +178,7 @@ void RateLimiter::SetupEndpoint(const QString &endpoint,
         if ((error_code >= 200) && (error_code <= 299)) {
             spdlog::debug("RateLimit::SetupEndpoint() HEAD reply status is {}", error_code);
             return;
-        };
+        }
         const QString error_value = QString::number(error_code);
         const QString error_string = network_reply->errorString();
         spdlog::error("RateLimiter::SetupEndpoint() network error {} in HEAD reply for {}: {}",
@@ -181,7 +194,7 @@ void RateLimiter::SetupEndpoint(const QString &endpoint,
         QStringList messages;
         for (const auto &error : errors) {
             messages.append(error.errorString());
-        };
+        }
     });
 
     // WARNING: it is important to wait for this head request to finish before proceeding,
@@ -211,7 +224,7 @@ void RateLimiter::ProcessHeadResponse(const QString &endpoint,
     // Make sure the network reply is a valid pointer before using it.
     if (network_reply == nullptr) {
         spdlog::error("The HEAD reply was null.");
-    };
+    }
 
     // Check for network errors.
     const auto error_code = network_reply->error();
@@ -221,8 +234,8 @@ void RateLimiter::ProcessHeadResponse(const QString &endpoint,
         } else {
             spdlog::error("The HEAD reply had a network error.");
             LogSetupReply(network_request, network_reply);
-        };
-    };
+        }
+    }
 
     // Check for other HTTP errors.
     const int response_code = RateLimit::ParseStatus(network_reply);
@@ -230,14 +243,14 @@ void RateLimiter::ProcessHeadResponse(const QString &endpoint,
     if (response_failed) {
         spdlog::error("The HEAD request failed");
         LogSetupReply(network_request, network_reply);
-    };
+    }
 
     // All endpoints should be rate limited.
     if (!network_reply->hasRawHeader("X-Rate-Limit-Policy")) {
         spdlog::error("The HEAD response did not contain a rate limit policy for endpoint: {}",
                       endpoint);
         LogSetupReply(network_request, network_reply);
-    };
+    }
 
     // Extract the policy name.
     const QString policy_name = network_reply->rawHeader("X-Rate-Limit-Policy");
@@ -250,8 +263,8 @@ void RateLimiter::ProcessHeadResponse(const QString &endpoint,
     for (const auto &name : raw_headers) {
         if (QString::fromUtf8(name).startsWith("X-Rate-Limit", Qt::CaseInsensitive)) {
             lines.append(QString("%1 = '%2'").arg(name, network_reply->rawHeader(name)));
-        };
-    };
+        }
+    }
     lines.append("</HEAD_RESPONSE_HEADERS>");
     spdlog::debug("HEAD response received for {}:\n{}", policy_name, lines.join("\n"));
 
@@ -269,7 +282,11 @@ void RateLimiter::ProcessHeadResponse(const QString &endpoint,
 void RateLimiter::LogSetupReply(const QNetworkRequest &request, const QNetworkReply *reply)
 {
     // Log the request headers.
-    spdlog::info("RateLimiter: request url is {}", request.url().toString());
+    spdlog::info("RateLimiter: request url was {}", request.url().toString());
+
+    QStringList lines;
+
+    // Log the request headers.
     const auto &raw_headers = request.rawHeaderList();
     for (const auto &name : raw_headers) {
         const bool is_authorization = (0 == name.compare("Authorization", Qt::CaseInsensitive));
@@ -278,36 +295,43 @@ void RateLimiter::LogSetupReply(const QNetworkRequest &request, const QNetworkRe
             // Mask the OAuth bearer token so it's not written to the log.
             value.fill('*');
             value += " (The OAuth token has been masked for security)";
-        };
-        spdlog::info("RateLimiter: request header {} = {}", name, value);
-    };
+        }
+        lines.append(QString("request header %1 = '%2'").arg(name, value));
+    }
+    spdlog::info("RateLimiter: request had {} headers:\n{}", lines.size(), lines.join("\n"));
 
     // Log the request attributes.
+    lines.clear();
     for (const auto &pair : ATTRIBUTES) {
         const QNetworkRequest::Attribute &code = pair.first;
         const char *name = pair.second;
         const QVariant value = request.attribute(code);
         if (value.isValid()) {
-            spdlog::info("RateLimiter: request attribute {} = {}", name, value.toString());
-        };
-    };
+            lines.append(QString("request attribute %1 = %2").arg(name, value.toString()));
+        }
+    }
+    spdlog::info("RateLimiter: request had {} attributes:\n{}", lines.size(), lines.join("\n"));
 
     // Log the reply headers.
+    lines.clear();
     for (const auto &header : reply->rawHeaderPairs()) {
         const auto &name = header.first;
         const auto &value = header.second;
-        spdlog::info("RateLimiter: reply header {} = {}", name, value);
-    };
+        lines.append(QString("reply header %1 = '%2'").arg(name, value));
+    }
+    spdlog::info("RateLimiter: reply had {} headers:\n{}", lines.size(), lines.join("\n"));
 
     // Log the reply attributes.
+    lines.clear();
     for (const auto &pair : ATTRIBUTES) {
         const QNetworkRequest::Attribute &code = pair.first;
         const char *name = pair.second;
         const QVariant value = reply->attribute(code);
         if (value.isValid()) {
-            spdlog::info("RateLimiter: reply attribute {} = {}", name, value.toString());
-        };
-    };
+            lines.append(QString("reply attribute %1 = %2").arg(name, value.toString()));
+        }
+    }
+    spdlog::info("RateLimiter: reply had {} attributes:\n{}", lines.size(), lines.join("\n"));
 }
 
 RateLimitManager &RateLimiter::GetManager(const QString &endpoint, const QString &policy_name)
@@ -339,7 +363,7 @@ RateLimitManager &RateLimiter::GetManager(const QString &endpoint, const QString
         RateLimitManager *manager = it->second;
         m_manager_by_endpoint[endpoint] = manager;
         return *manager;
-    };
+    }
 }
 
 QNetworkReply *RateLimiter::SendRequest(QNetworkRequest request)
@@ -352,7 +376,7 @@ void RateLimiter::OnUpdateRequested()
     spdlog::trace("RateLimiter::OnUpdateRequested() entered");
     for (const auto &manager : m_managers) {
         emit PolicyUpdate(manager->policy());
-    };
+    }
 }
 
 void RateLimiter::OnPolicyUpdated(const RateLimitPolicy &policy)
@@ -390,7 +414,7 @@ void RateLimiter::SendStatusUpdate()
     const QDateTime now = QDateTime::currentDateTime();
     while (!m_pauses.empty() && (m_pauses.begin()->first < now)) {
         m_pauses.erase(m_pauses.begin());
-    };
+    }
 
     if (m_pauses.empty()) {
         spdlog::trace("RateLimiter::SendStatusUpdate() stopping status updates");
@@ -400,5 +424,5 @@ void RateLimiter::SendStatusUpdate()
         const QDateTime &pause_end = pause.first;
         const QString policy_name = pause.second;
         emit Paused(now.secsTo(pause_end), policy_name);
-    };
+    }
 }

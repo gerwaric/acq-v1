@@ -5,6 +5,8 @@
 
 #include <glaze/glaze.hpp>
 
+#include "util/spdlog_qt.h"
+
 #include <QByteArray>
 #include <QDateTime>
 #include <QString>
@@ -15,94 +17,46 @@
 
 #define ACQUISITION_USE_GLAZE
 
+// This file add support to glaze for:
+//
+//  - QString
+//  - QByteArray
+//  - QDateTime
+//
+//  - std::map<QString,T>
+//  - std::map<QByteArray,T>
+//
+//  - std::unordered_map<QString,T>
+//  - std::unordered_map<QByteArray,T>
+//;
+// WARNING: this only works with the two-argument forms of map and unordered_map.
+
+namespace {
+
+    template<typename T>
+    constexpr bool is_qbytearray = std::is_same_v<T, QByteArray>;
+
+    template<typename T>
+    constexpr bool is_qstring = std::is_same_v<T, QString>;
+
+    template<typename Key>
+    constexpr bool is_qt_key = is_qbytearray<Key> || is_qstring<Key>;
+
+    template<template<typename, typename> class Map, typename Key, typename T>
+    constexpr bool is_map = std::is_same_v<Map<Key, T>, std::map<Key, T>>;
+
+    template<template<typename, typename> class Map, typename Key, typename T>
+    constexpr bool is_unordered_map = std::is_same_v<Map<Key, T>, std::unordered_map<Key, T>>;
+
+    template<template<typename, typename> class Map, typename Key, typename T>
+    constexpr bool is_supported_map = is_map<Map, Key, T> || is_unordered_map<Map, Key, T>;
+
+    template<template<typename, typename> class Map, typename Key, typename T>
+    constexpr bool is_supported_map_with_qt_key = is_qt_key<Key> && is_supported_map<Map, Key, T>;
+
+} // namespace
+
 namespace glz {
-
-    // ----- QByteArray -----
-
-    template<>
-    struct to<JSON, QByteArray>
-    {
-        template<auto Opts>
-        static inline void op(const QByteArray &value, auto &&...args) noexcept
-        {
-            const std::string str(value.constData(), value.size());
-            serialize<JSON>::op<Opts>(str, args...);
-        }
-    };
-
-    template<>
-    struct from<JSON, QByteArray>
-    {
-        template<auto Opts>
-        static inline void op(QByteArray &value, auto &&...args) noexcept
-        {
-            std::string str;
-            parse<JSON>::op<Opts>(str, args...);
-            value = QByteArray::fromStdString(str);
-        }
-    };
-
-    // QByteArray -- std::map
-
-    template<typename T>
-    struct to<JSON, std::map<QByteArray, T>>
-    {
-        template<auto Opts>
-        static void op(const std::map<QByteArray, T> &map, auto &&...args) noexcept
-        {
-            std::map<std::string, T> temp;
-            for (const auto &[k, v] : map) {
-                temp.emplace(k.toStdString(), v);
-            }
-            serialize<JSON>::op<Opts>(temp, std::forward<decltype(args)>(args)...);
-        }
-    };
-
-    template<typename T>
-    struct from<JSON, std::map<QByteArray, T>>
-    {
-        template<auto Opts>
-        static void op(std::map<QByteArray, T> &map, auto &&...args) noexcept
-        {
-            std::map<std::string, T> temp;
-            parse<JSON>::op<Opts>(temp, std::forward<decltype(args)>(args)...);
-            map.clear();
-            for (auto &[k, v] : temp) {
-                map.emplace(QByteArray::fromStdString(k), std::move(v));
-            }
-        }
-    };
-
-    // QByteArray -- std::unordered_map
-
-    template<typename T>
-    struct to<JSON, std::unordered_map<QByteArray, T>>
-    {
-        template<auto Opts>
-        static void op(const std::unordered_map<QByteArray, T> &map, auto &&...args) noexcept
-        {
-            std::unordered_map<std::string, T> temp;
-            for (const auto &[k, v] : map) {
-                temp.emplace(k.toStdString(), v);
-            }
-            serialize<JSON>::op<Opts>(temp, std::forward<decltype(args)>(args)...);
-        }
-    };
-
-    template<typename T>
-    struct from<JSON, std::unordered_map<QByteArray, T>>
-    {
-        template<auto Opts>
-        static void op(std::unordered_map<QByteArray, T> &map, auto &&...args) noexcept
-        {
-            std::unordered_map<std::string, T> temp;
-            parse<JSON>::op<Opts>(temp, std::forward<decltype(args)>(args)...);
-            map.clear();
-            for (auto &[k, v] : temp) {
-                map.emplace(QByteArray::fromStdString(k), std::move(v));
-            }
-        }
-    };
 
     // ----- QString -----
 
@@ -112,8 +66,9 @@ namespace glz {
         template<auto Opts>
         static inline void op(const QString &value, auto &&...args) noexcept
         {
-            const std::string str = value.toUtf8().toStdString();
-            serialize<JSON>::op<Opts>(str, args...);
+            const QByteArray utf8{value.toUtf8()};
+            const std::string str{utf8.toStdString()};
+            glz::serialize<JSON>::op<Opts>(str, args...);
         }
     };
 
@@ -124,70 +79,33 @@ namespace glz {
         static inline void op(QString &value, auto &&...args) noexcept
         {
             std::string str;
-            parse<JSON>::op<Opts>(str, args...);
+            glz::parse<JSON>::op<Opts>(str, args...);
             value = QString::fromUtf8(str);
         }
     };
 
-    // std::map<QString, T>
+    // ----- QByteArray -----
 
-    template<typename T>
-    struct to<JSON, std::map<QString, T>>
+    template<>
+    struct to<JSON, QByteArray>
     {
         template<auto Opts>
-        static void op(const std::map<QString, T> &map, auto &&...args) noexcept
+        static inline void op(const QByteArray &value, auto &&...args) noexcept
         {
-            std::map<std::string, T> temp;
-            for (const auto &[k, v] : map) {
-                temp.emplace(k.toUtf8().toStdString(), v);
-            };
-            serialize<JSON>::op<Opts>(temp, std::forward<decltype(args)>(args)...);
-        };
-    };
-
-    template<typename T>
-    struct from<JSON, std::map<QString, T>>
-    {
-        template<auto Opts>
-        static void op(std::map<QString, T> &map, auto &&...args) noexcept
-        {
-            std::map<std::string, T> temp;
-            parse<JSON>::op<Opts>(temp, std::forward<decltype(args)>(args)...);
-            map.clear();
-            for (auto &[k, v] : temp) {
-                map.emplace(QString::fromUtf8(k), std::move(v));
-            };
-        };
-    };
-
-    // std::unordered_map<QString, T>
-
-    template<typename T>
-    struct to<JSON, std::unordered_map<QString, T>>
-    {
-        template<auto Opts>
-        static void op(const std::unordered_map<QString, T> &map, auto &&...args) noexcept
-        {
-            std::unordered_map<std::string, T> temp;
-            for (const auto &[k, v] : map) {
-                temp.emplace(k.toUtf8().toStdString(), v);
-            }
-            serialize<JSON>::op<Opts>(temp, std::forward<decltype(args)>(args)...);
+            const std::string_view str(value.constData(), value.size());
+            glz::serialize<JSON>::op<Opts>(str, args...);
         }
     };
 
-    template<typename T>
-    struct from<JSON, std::unordered_map<QString, T>>
+    template<>
+    struct from<JSON, QByteArray>
     {
         template<auto Opts>
-        static void op(std::unordered_map<QString, T> &map, auto &&...args) noexcept
+        static inline void op(QByteArray &value, auto &&...args) noexcept
         {
-            std::unordered_map<std::string, T> temp;
-            parse<JSON>::op<Opts>(temp, std::forward<decltype(args)>(args)...);
-            map.clear();
-            for (auto &[k, v] : temp) {
-                map.emplace(QString::fromUtf8(k), std::move(v));
-            }
+            std::string str;
+            glz::parse<JSON>::op<Opts>(str, args...);
+            value = QByteArray::fromStdString(str);
         }
     };
 
@@ -199,7 +117,8 @@ namespace glz {
         template<auto Opts>
         static inline void op(const QDateTime &dt, auto &&...args) noexcept
         {
-            const std::string str = dt.toString(Qt::RFC2822Date).toStdString();
+            const QByteArray utf8 = dt.toString(Qt::RFC2822Date).toUtf8();
+            const std::string str(utf8.constData(), utf8.size());
             serialize<JSON>::op<Opts>(str, std::forward<decltype(args)>(args)...);
         }
     };
@@ -213,6 +132,50 @@ namespace glz {
             std::string str;
             parse<JSON>::op<Opts>(str, std::forward<decltype(args)>(args)...);
             dt = QDateTime::fromString(QString::fromStdString(str), Qt::RFC2822Date);
+        }
+    };
+
+    // ----- maps with QString and QByteArray keys -----
+
+    template<template<typename, typename> class Map, typename Key, typename T>
+        requires is_supported_map_with_qt_key<Map, Key, T>
+    struct to<JSON, Map<Key, T>>
+    {
+        template<auto Opts>
+        static void op(const Map<Key, T> &map, auto &&...args) noexcept
+        {
+            Map<std::string, T> std_map;
+            for (const auto &[k, v] : map) {
+                if constexpr (is_qbytearray<Key>) {
+                    const std::string s(k.constData(), k.size());
+                    std_map.emplace(s, std::move(v));
+                } else if constexpr (is_qstring<Key>) {
+                    const QByteArray utf8 = k.toUtf8();
+                    const std::string s(utf8.constData(), utf8.size());
+                    std_map.emplace(s, std::move(v));
+                }
+            }
+            glz::serialize<JSON>::op<Opts>(std_map, std::forward<decltype(args)>(args)...);
+        }
+    };
+
+    template<template<typename, typename> class Map, typename Key, typename T>
+        requires is_supported_map_with_qt_key<Map, Key, T>
+    struct from<JSON, Map<Key, T>>
+    {
+        template<auto Opts>
+        static void op(Map<Key, T> &map, auto &&...args) noexcept
+        {
+            Map<std::string, T> std_map;
+            glz::parse<JSON>::op<Opts>(std_map, std::forward<decltype(args)>(args)...);
+            map.clear();
+            for (auto &[k, v] : std_map) {
+                if constexpr (is_qbytearray<Key>) {
+                    map.emplace(QByteArray::fromStdString(k), std::move(v));
+                } else if constexpr (is_qstring<Key>) {
+                    map.emplace(QString::fromUtf8(k), std::move(v));
+                }
+            }
         }
     };
 

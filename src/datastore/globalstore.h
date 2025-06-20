@@ -7,12 +7,12 @@
 
 #include "util/json.h"
 
-class GlobalDataStore : public DataStore
+class GlobalStore : public DataStore
 {
     Q_OBJECT
 
 public:
-    GlobalDataStore(QObject *parent = nullptr);
+    GlobalStore(QObject *parent = nullptr);
 
     void set(const QString &key, const QVariant &value);
     QVariant get(const QString &key);
@@ -28,7 +28,7 @@ public:
     std::pair<T, bool> retrieve(const QString &key)
     {
         const QString strval = get(key).toString();
-        return json::from_json<T>(strval, json::STRICT);
+        return json::parse_strict<T>(strval);
     };
 
 private:

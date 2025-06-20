@@ -24,11 +24,13 @@ namespace poe {
         };
 
         QString id;                                        // string the league's name
+        QString name;                                      // TODO: Undocumented!
         std::optional<QString> realm;                      // ? string pc, xbox, or sony
         std::optional<QString> description;                // ? string
         std::optional<poe::League::Category> category;     // ? object
         std::optional<std::vector<poe::LeagueRule>> rules; // ? array of LeagueRule
         std::optional<QString> registerAt;                 // ? string date time(ISO8601)
+        QString goal;                                      // TODO: undocumented!
         std::optional<bool> event;                         // ? bool always true if present
         std::optional<QString> url;        // ? string a url link to a Path of Exile forum thread
         std::optional<QString> startAt;    // ? string date time(ISO8601)

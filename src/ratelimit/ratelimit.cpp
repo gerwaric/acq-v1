@@ -15,7 +15,7 @@ QByteArray RateLimit::ParseHeader(QNetworkReply *const reply, const QByteArray &
 {
     if (!reply->hasRawHeader(name)) {
         spdlog::error("RateLimit: the network reply is missing a header: {}", name);
-    };
+    }
     return reply->rawHeader(name);
 }
 
@@ -28,7 +28,7 @@ QByteArrayList RateLimit::ParseHeaderList(QNetworkReply *const reply,
     const QByteArrayList items = value.split(delim);
     if (items.isEmpty()) {
         spdlog::error("GetHeaderList(): {} is empty", name);
-    };
+    }
     return items;
 }
 
@@ -63,7 +63,7 @@ QDateTime RateLimit::ParseDate(QNetworkReply *const reply)
     const QDateTime date = rfc2822::parse(timestamp).toLocalTime();
     if (!date.isValid()) {
         spdlog::error("invalid date parsed from {}", timestamp);
-    };
+    }
     return date;
 }
 

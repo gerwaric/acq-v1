@@ -5,6 +5,8 @@
 
 #include <poe/item.h>
 
+#include <glaze/glaze.hpp>
+
 #include <QString>
 
 #include <optional>
@@ -28,3 +30,21 @@ namespace poe {
     };
 
 } // namespace poe
+
+template<>
+struct glz::meta<poe::PublicStashChange>
+{
+    // clang-format off
+    using T = poe::PublicStashChange;
+    static constexpr auto value = glz::object(
+        "id",                &T::id,
+        "public",            &T::public_,
+        "accountName",       &T::accountName,
+        "stash",             &T::stash,
+        "lastCharacterName", &T::lastCharacterName,
+        "stashType",         &T::stashType,
+        "league",            &T::league,
+        "items",             &T::items
+        );
+    // clang-format on
+};

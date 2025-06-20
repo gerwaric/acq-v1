@@ -78,7 +78,7 @@ void OAuthManager::initOAuth()
             // empty, then we have to remove it to avoid a server error.
             if (stage == QAbstractOAuth::Stage::RefreshingAccessToken) {
                 parameters->remove("client_secret");
-            };
+            }
         });
 }
 
@@ -112,17 +112,20 @@ void OAuthManager::receiveGrant()
     if (!diff.empty()) {
         spdlog::error("OAuth: was not granted these requested scopes: {}",
                       QStringList(diff.begin(), diff.end()).join(", "));
-    };
+    }
     spdlog::info("OAuth access was granted.");
-    emit accessGranted(m_token);
+    emit grantAccess(m_token);
     emit isAuthenticatedChanged();
 }
 
 void OAuthManager::setToken(const OAuthToken &token)
 {
-    //m_oauth.setToken(token.access_token);
-    m_oauth.setRefreshToken(token.refresh_token);
-    m_oauth.refreshTokens();
+    if (token.refresh_token.isEmpty()) {
+        spdlog::error("OAuth: trying to refresh with an empty refresh token");
+    } else {
+        m_oauth.setRefreshToken(token.refresh_token);
+        m_oauth.refreshTokens();
+    }
 }
 
 void OAuthManager::initLogin()

@@ -5,45 +5,59 @@
 
 #include <QObject>
 
-#include "poe/character.h"
-#include "poe/league.h"
-#include "poe/stashtab.h"
-
-#include <vector>
+#include <QNetworkReply>
+#include <QNetworkRequest>
 
 class PoeClient : public QObject
 {
     Q_OBJECT
 
 public:
+    enum class Realm { PC, XBOX, SONY, POE2 };
+    Q_ENUM(Realm);
+
     explicit PoeClient(QObject *parent = nullptr);
 
-    // https://www.pathofexile.com/developer/docs/reference#profile-get
-    void getProfile();
-
     // https://www.pathofexile.com/developer/docs/reference#leagues-list
-    void listLeagues(QStringView realm, QStringView type, int limit, int offset);
+    void listLeagues(const QString &realm);
 
     // https://www.pathofexile.com/developer/docs/reference#characters-list
-    void listCharacters(QStringView realm);
+    void listCharacters(const QString &realm);
 
     // https://www.pathofexile.com/developer/docs/reference#stashes-list
-    void listStashes(QStringView realm, QStringView league);
+    void listStashes(const QString &realm, const QString &league);
 
     // https://www.pathofexile.com/developer/docs/reference#characters-get
-    void getCharacter(QStringView realm, QStringView name);
+    void getCharacter(const QString &realm, const QString &name);
 
     // https://www.pathofexile.com/developer/docs/reference#stashes-get
-    void getStash(QStringView realm,
-                  QStringView league,
-                  QStringView stash_id,
-                  QStringView substash_id);
+    void getStash(const QString &realm,
+                  const QString &league,
+                  const QString &stash_id,
+                  const QString &substash_id);
 
 signals:
-    void receivedProfile();
-    void receivedLeagueList(std::vector<poe::League> leagues);
-    void receivedCharacterList(std::vector<poe::Character> characters);
-    void receivedStashList(std::vector<poe::StashTab> stash_tabs);
-    void receivedCharacter(poe::Character character);
-    void receivedStash(poe::StashTab stash_Tab);
+
+    // Emitted when a request has been made
+    void sendRequest(QString endpoint,
+                     QNetworkRequest request,
+                     std::function<void(QNetworkReply *)>);
+
+    // Emitted when a reply has been received.
+    void leagueListReceived(QString realm, std::shared_ptr<QByteArray> data);
+    void characterListReceived(QString realm, std::shared_ptr<QByteArray> data);
+    void stashListReceived(QString realm, QString league, std::shared_ptr<QByteArray> data);
+    void characterReceived(QString realm, QString name, std::shared_ptr<QByteArray> data);
+    void stashReceived(QString realm,
+                       QString league,
+                       QString stash_id,
+                       QString substash_id,
+                       std::shared_ptr<QByteArray> data);
+
+private:
+    // Convenience function to add realm to request urls.
+    [[nodiscard]] static bool checkRealm(const QString &realm, const char *endpoint);
+
+    // Convenience function to get json data from a network reply.
+    [[nodiscard]] static std::shared_ptr<QByteArray> getData(QNetworkReply *reply);
 };

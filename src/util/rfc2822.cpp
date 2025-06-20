@@ -45,7 +45,7 @@ namespace {
     static int offsetFromObsZone(QStringView obsZone, bool &ok)
     {
         for (unsigned int i = 0; i < sizeof(qt_obsZones) / sizeof(qt_obsZones[0]); ++i) {
-            if (obsZone == QLatin1StringView(qt_obsZones[i], 4)) {
+            if (obsZone == QLatin1StringView(qt_obsZones[i], 3)) {
                 ok = true;
                 return qt_obsOffsets[i];
             }

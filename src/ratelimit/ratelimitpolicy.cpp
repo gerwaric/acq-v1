@@ -44,7 +44,7 @@ RateLimitItem::RateLimitItem(const QByteArray &limit_fragment, const QByteArray 
         m_status = RateLimit::Status::BORDERLINE;
     } else {
         m_status = RateLimit::Status::OK;
-    };
+    }
 
     // Determine which timing resolution applies.
     m_resolution = (m_limit.period() <= RateLimit::INITIAL_VS_SUSTAINED_PERIOD_CUTOFF)
@@ -59,19 +59,19 @@ void RateLimitItem::Check(const RateLimitItem &other, const QString &prefix) con
                      prefix,
                      m_limit.hits(),
                      other.m_limit.hits());
-    };
+    }
     if (m_limit.period() != other.m_limit.period()) {
         spdlog::warn("{} limit.period changed from {} to {}",
                      prefix,
                      m_limit.period(),
                      other.m_limit.period());
-    };
+    }
     if (m_limit.restriction() != other.m_limit.restriction()) {
         spdlog::warn("{} limit.restriction changed from {} to {}",
                      prefix,
                      m_limit.restriction(),
                      other.m_limit.restriction());
-    };
+    }
 }
 
 QDateTime RateLimitItem::GetNextSafeSend(const boost::circular_buffer<RateLimit::Event> &history) const
@@ -83,7 +83,7 @@ QDateTime RateLimitItem::GetNextSafeSend(const boost::circular_buffer<RateLimit:
     // We can send immediately if we have not bumped up against a rate limit.
     if (m_state.hits() < m_limit.hits()) {
         return now;
-    };
+    }
 
     // Determine how far back into the history we can look.
     const size_t n = (m_limit.hits() > history.size()) ? history.size() : m_limit.hits();
@@ -97,7 +97,7 @@ QDateTime RateLimitItem::GetNextSafeSend(const boost::circular_buffer<RateLimit:
     // Add the timing bucket resolution if we are borderline to avoid rate limiting.
     if (m_status >= RateLimit::Status::BORDERLINE) {
         next_send = next_send.addSecs(m_resolution);
-    };
+    }
 
     spdlog::trace("RateLimit::RuleItem::GetNextSafeSend()"
                   " n = {}"
@@ -128,12 +128,12 @@ int RateLimitItem::EstimateDuration(int request_count, int minimum_delay_msec) c
     if (initial_burst < 0) {
         initial_burst = 0;
         duration += restriction;
-    };
+    }
 
     int remaining_requests = request_count - initial_burst;
     if (remaining_requests < 0) {
         remaining_requests = 0;
-    };
+    }
 
     const int full_periods = (remaining_requests / max_hits);
     const int final_burst = (remaining_requests % max_hits);
@@ -163,7 +163,7 @@ RateLimitRule::RateLimitRule(const QByteArray &name, QNetworkReply *const reply)
     const int item_count = limit_fragments.size();
     if (state_fragments.size() != limit_fragments.size()) {
         spdlog::error("Invalid data for policy role.");
-    };
+    }
     m_items.reserve(item_count);
     for (int j = 0; j < item_count; ++j) {
         // Create a new rule item from the next pair of fragments.
@@ -172,11 +172,11 @@ RateLimitRule::RateLimitRule(const QByteArray &name, QNetworkReply *const reply)
         // Keep track of the max hits, max rate, and overall status.
         if (m_maximum_hits < item.limit().hits()) {
             m_maximum_hits = item.limit().hits();
-        };
+        }
         if (m_status < item.status()) {
             m_status = item.status();
-        };
-    };
+        }
+    }
 }
 
 void RateLimitRule::Check(const RateLimitRule &other, const QString &prefix) const
@@ -186,7 +186,7 @@ void RateLimitRule::Check(const RateLimitRule &other, const QString &prefix) con
     // Check the rule name
     if (m_name != other.m_name) {
         spdlog::warn("{} rule name changed from {} to {}", prefix, m_name, other.m_name);
-    };
+    }
 
     // Check the number of items in this rule
     if (m_items.size() != other.m_items.size()) {
@@ -204,8 +204,8 @@ void RateLimitRule::Check(const RateLimitRule &other, const QString &prefix) con
             const auto &old_item = m_items[i];
             const auto &new_item = other.m_items[i];
             old_item.Check(new_item, item_prefix);
-        };
-    };
+        }
+    }
 }
 
 //=========================================================================================
@@ -231,16 +231,16 @@ RateLimitPolicy::RateLimitPolicy(QNetworkReply *const reply)
         // Check the status of this rule..
         if (rule.status() >= RateLimit::Status::VIOLATION) {
             spdlog::error("Rate limit policy '{}:{}' is {})", m_name, rule.name(), rule.status());
-        };
+        }
 
         // Update metrics for this rule.
         if (m_maximum_hits < rule.maximum_hits()) {
             m_maximum_hits = rule.maximum_hits();
-        };
+        }
         if (m_status < rule.status()) {
             m_status = rule.status();
-        };
-    };
+        }
+    }
 }
 
 void RateLimitPolicy::Check(const RateLimitPolicy &other) const
@@ -250,7 +250,7 @@ void RateLimitPolicy::Check(const RateLimitPolicy &other) const
     // Check the policy name
     if (m_name != other.m_name) {
         spdlog::warn("The rate limit policy name change from {} to {}", m_name, other.m_name);
-    };
+    }
 
     // Check the number of rules
     if (m_rules.size() != other.m_rules.size()) {
@@ -268,8 +268,8 @@ void RateLimitPolicy::Check(const RateLimitPolicy &other) const
             const auto &old_rule = m_rules[i];
             const auto &new_rule = other.m_rules[i];
             old_rule.Check(new_rule, prefix);
-        };
-    };
+        }
+    }
 }
 
 QDateTime RateLimitPolicy::GetNextSafeSend(const boost::circular_buffer<RateLimit::Event> &history)
@@ -288,9 +288,9 @@ QDateTime RateLimitPolicy::GetNextSafeSend(const boost::circular_buffer<RateLimi
             if (next_send < t) {
                 spdlog::trace("RateLimit::Policy::GetNextSafeSend() updating next_send");
                 next_send = t;
-            };
-        };
-    };
+            }
+        }
+    }
     return next_send;
 }
 
@@ -304,8 +304,8 @@ QDateTime RateLimitPolicy::EstimateDuration(int num_requests, int minimum_delay_
             const int wait = item.EstimateDuration(num_requests, minimum_delay_msec);
             if (longest_wait < wait) {
                 longest_wait = wait;
-            };
-        };
-    };
+            }
+        }
+    }
     return QDateTime::currentDateTime().toLocalTime().addSecs(longest_wait);
 }

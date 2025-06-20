@@ -15,11 +15,12 @@ configure_file(
     @ONLY
 )
 
+
 # Add generated header directory to include path
 add_library(version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated/app_version.h)
 target_include_directories(version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-qt_add_executable(acquisition
+qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     # Entry point
     main.cpp
     # Other stuff
@@ -31,10 +32,14 @@ qt_add_executable(acquisition
     oauthtoken.h
     oauthmanager.cpp
     oauthmanager.h
+    poe.h
     poeclient.cpp
     poeclient.h
     settingsmanager.cpp
     settingsmanager.h
+    # Models
+    models/itemrow.cpp
+    models/itemrow.h
     # Utilities
     util/glaze_qt.h
     util/json.h
@@ -44,12 +49,10 @@ qt_add_executable(acquisition
     # Databases
     datastore/datastore.cpp
     datastore/datastore.h
-    datastore/globaldatastore.cpp
-    datastore/globaldatastore.h
-    datastore/leaguedatastore.cpp
-    datastore/leaguedatastore.h
-    datastore/userdatastore.cpp
-    datastore/userdatastore.h
+    datastore/globalstore.cpp
+    datastore/globalstore.h
+    datastore/userstore.cpp
+    datastore/userstore.h
     # Path of Exile API types
     poe/account.h
     poe/accountprofile.h
@@ -94,6 +97,13 @@ qt_add_executable(acquisition
     ratelimit/ratelimitpolicy.h
 )
 
+qt_add_qml_module(acquisition
+    URI "Acquisition"
+    QML_FILES
+        main.qml
+        qml/MainControlPanel.qml
+)
+
 target_include_directories(acquisition PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(acquisition
@@ -113,10 +123,10 @@ target_link_libraries(acquisition
     version
 )
 
-set_target_properties(acquisition PROPERTIES
-    MACOSX_BUNDLE_GUI_IDENTIFIER app.acquisition.com
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
-)
+if(APPLE)
+    set_target_properties(acquisition PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER app.acquisition.com
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    )
+endif()

@@ -32,7 +32,7 @@ private slots:
     void receiveGrant();
 
 signals:
-    void accessGranted(const OAuthToken &token);
+    void grantAccess(const OAuthToken &token);
     void isAuthenticatedChanged();
 
 private:

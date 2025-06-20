@@ -38,7 +38,7 @@ namespace {
         constexpr auto parse(fmt::format_parse_context &ctx) -> decltype(ctx.begin())
         {
             return ctx.end();
-        };
+        }
     };
 
     // Use a base class for Qt byte array formatters.
@@ -49,7 +49,7 @@ namespace {
         {
             const auto sv = std::string_view(arr.constData(), arr.size());
             return fmt::format_to(ctx.out(), "{}", sv);
-        };
+        }
     };
 
     // Use a base class for Qt string formatters.
@@ -61,7 +61,7 @@ namespace {
             const auto utf8 = str.toUtf8();
             const auto sv = std::string_view(utf8.constData(), utf8.size());
             return fmt::format_to(ctx.out(), "{}", sv);
-        };
+        }
     };
 
     // Use a base class for Qt Enum formatters to subclass.
@@ -78,8 +78,8 @@ namespace {
                 return fmt::format_to(ctx.out(), "{}", key);
             } else {
                 return fmt::format_to(ctx.out(), "{}({})", metaEnum.name(), static_cast<int>(value));
-            };
-        };
+            }
+        }
     };
 } // namespace
 
@@ -95,7 +95,7 @@ namespace fmt {
             -> decltype(ctx.out())
         {
             return fmt::format_to(ctx.out(), "{}", spdlog::level::to_string_view(level));
-        };
+        }
     };
 
     // String and byte array formatters.
@@ -132,10 +132,10 @@ namespace fmt {
         {
             if (!var.isValid()) {
                 return fmt::format_to(ctx.out(), "<invalid>");
-            };
+            }
             if (var.isNull()) {
                 return fmt::format_to(ctx.out(), "<null>");
-            };
+            }
             const auto utf8 = var.toString().toUtf8();
             const auto sv = std::string_view(utf8.constData(), utf8.size());
             return fmt::format_to(ctx.out(), "{}", sv);

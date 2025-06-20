@@ -9,6 +9,8 @@
 #include <poe/itemjeweldata.h>
 #include <poe/passivenode.h>
 
+#include <glaze/glaze.hpp>
+
 #include <QString>
 
 #include <optional>
@@ -77,3 +79,30 @@ namespace poe {
     };
 
 } // namespace poe
+
+template<>
+struct glz::meta<poe::Character>
+{
+    // clang-format off
+    using T = poe::Character;
+    static constexpr auto value = glz::object(
+        "id",         &T::id,
+        "name",       &T::name, // string
+        "realm",      &T::realm, // string pc, xbox, or sony
+        "class",      &T::class_, // string
+        "league",     &T::league, // ? string
+        "level",      &T::level, // uint
+        "experience", &T::experience, // uint
+        "ruthless",   &T::ruthless, // ? bool always true if present
+        "expired",    &T::expired, // ? bool always true if present
+        "deleted",    &T::deleted, // ? bool always true if present
+        "current",    &T::current, // ? bool always true if present
+        "equipment",  &T::equipment, // ? array of Item
+        "inventory",  &T::inventory, // ? array of Item
+        "rucksack",   &T::rucksack, // ? array of Item items stored in the Primalist's Rucksack
+        "jewels",     &T::jewels, // ? array of Item
+        "passives",   &T::passives, // ? object
+        "metadata",   &T::metadata // ? object
+    );
+    // clang-format on
+};

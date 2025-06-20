@@ -29,9 +29,11 @@ QNetworkReply *NetworkManager::createRequest(QNetworkAccessManager::Operation op
     if (request.url().host() == "api.pathofexile.com") {
         if (m_bearer_token.isEmpty()) {
             spdlog::error("API calls may fail because the bearer token is empty.");
-        };
+        }
         request.setRawHeader("Authorization", m_bearer_token);
-    };
+    }
+
+    spdlog::trace("NetworkManager: requesting {}", request.url().toDisplayString());
 
     // Let the base class handle the rest.
     return QNetworkAccessManager::createRequest(op, request, outgoingData);

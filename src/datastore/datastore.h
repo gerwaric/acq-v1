@@ -20,6 +20,10 @@ public:
 protected:
     QString getThreadLocalConnectionName() const;
     QSqlDatabase getThreadLocalDatabase();
+
+    void createTable(const QString &table, const QStringList &columns);
+    void createIndexes(const QString &table, const QStringList &columns);
+
     const QString m_filename;
 
 private:

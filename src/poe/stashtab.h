@@ -7,6 +7,8 @@
 
 #include <poe/item.h>
 
+#include <glaze/glaze.hpp>
+
 #include <QString>
 
 #include <optional>
@@ -20,10 +22,16 @@ namespace poe {
     {
         struct Metadata
         {
+            struct Map
+            {
+                unsigned series;
+            };
+
             std::optional<bool> public_; // ? bool always true if present
             std::optional<bool> folder;  // ? bool always true if present
             std::optional<QString>
                 colour; // ? string 6 digit hex colour (NOTE: might be only 2 or 4 characters).
+            poe::StashTab::Metadata::Map map; // TODO: undocumented!
         };
 
         inline bool operator<(const StashTab &other) const
@@ -34,7 +42,7 @@ namespace poe {
         };
 
         QString id;                       // string a 10 digit hexadecimal string
-        std::optional<QString> parent;    // ? string a 10 digit hexadecimal string
+        std::optional<QString> folder;    // ? string a 10 digit hexadecimal string TODO: new
         QString name;                     // string
         QString type;                     // string
         std::optional<unsigned> index;    // ? uint
@@ -54,3 +62,17 @@ namespace poe {
     };
 
 }; // namespace poe
+
+template<>
+struct glz::meta<poe::StashTab::Metadata>
+{
+    // clang-format off
+    using T = poe::StashTab::Metadata;
+    static constexpr auto value = glz::object(
+        "public", &T::public_,
+        "folder", &T::folder,
+        "colour", &T::colour,
+        "map",    &T::map
+    );
+    // clang-format on
+};

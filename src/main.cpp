@@ -5,22 +5,22 @@
 
 #include "util/spdlog_qt.h"
 
-ACQUISITION_USE_SPDLOG
+ACQUISITION_USE_SPDLOG // prevents an unused header warning in Qt Creator
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <QQmlContext>
 
-#include <QDebug>
 #include <QDir>
 #include <QString>
-#include <QStringList>
 #include <QUrl>
 
-#include "util/json.h"
-
-//#include <QtQml/QQmlExtensionPlugin>
-//Q_IMPORT_QML_PLUGIN(AcquisitionPlugin)
+#ifdef QT_DEBUG
+    constexpr spdlog::level::level_enum DEFAULT_LOG_LEVEL
+    = spdlog::level::debug;
+#else
+    constexpr spdlog::level::level_enum DEFAULT_LOG_LEVEL
+    = spdlog::level::info;
+#endif
 
 void dumpQrcDirectory(const QString &path)
 {
@@ -28,7 +28,7 @@ void dumpQrcDirectory(const QString &path)
     if (!dir.exists()) {
         qWarning() << "QRC path does not exist:" << path;
         return;
-    };
+    }
     spdlog::info("Contents of {}:", path);
     const auto entries = dir.entryList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
     for (const QString &entry : entries) {
@@ -37,14 +37,17 @@ void dumpQrcDirectory(const QString &path)
         QFileInfo file_info(fullPath);
         if (file_info.isDir()) {
             dumpQrcDirectory(fullPath);
-        };
-    };
+        }
+    }
 }
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
+
+    // Set the default logging level before we do anything.
+    spdlog::set_level(DEFAULT_LOG_LEVEL);
 
     // Force constrution of the App here.
     engine.singletonInstance<App *>("Acquisition", "App");
