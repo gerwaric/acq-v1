@@ -18,7 +18,7 @@
 #include <QNetworkReply>
 
 // This is a helper define to avoid Qt Creator's warnings that this header is unused.
-#define ACQUISITION_USE_SPDLOG
+constexpr bool ACQUISITION_USE_SPDLOG = true;
 
 // Define an inline helper function to convert levels into QStrings.
 
@@ -66,7 +66,7 @@ namespace {
 
     // Use a base class for Qt Enum formatters to subclass.
     template<typename T>
-    struct EnumFormatter : public BaseFormatter
+    struct QtEnumFormatter : public BaseFormatter
     {
         static_assert(std::is_enum<T>::value, "T must be an enum type");
         template<typename FormatContext>
@@ -114,10 +114,11 @@ namespace fmt {
 
     // Enum formatters.
     template<>
-    struct formatter<QNetworkReply::NetworkError, char> : EnumFormatter<QNetworkReply::NetworkError>
+    struct formatter<QNetworkReply::NetworkError, char>
+        : QtEnumFormatter<QNetworkReply::NetworkError>
     {};
     template<>
-    struct formatter<Qt::CheckState, char> : EnumFormatter<Qt::CheckState>
+    struct formatter<Qt::CheckState, char> : QtEnumFormatter<Qt::CheckState>
     {};
 
     // QVariant formatter.

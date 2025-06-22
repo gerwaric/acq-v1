@@ -6,7 +6,7 @@
 #include "util/json.h"
 #include "util/spdlog_qt.h"
 
-ACQUISITION_USE_SPDLOG // prevents an unused header warning in Qt Creator
+static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
 
 #include <QDir>
 #include <QSqlError>
@@ -185,7 +185,37 @@ void UserStore::loadStashList(const QString &realm, const QString &league)
 
 void UserStore::loadStashes(const QString &realm, const QString &league)
 {
-    spdlog::error("UserStore::loadStashes(): TBD");
+    const QString stmt = "SELECT data FROM stashes WHERE ((realm = ?) AND (league = ?))";
+
+    auto db = getThreadLocalDatabase();
+    auto query = QSqlQuery(db);
+    query.prepare(stmt);
+    query.bindValue(0, realm);
+    query.bindValue(1, league);
+
+    if (!query.exec()) {
+        const QString message = query.lastError().text();
+        spdlog::error("UserStore: failed to load stashes for {} league in {} realm: {}",
+                      league,
+                      realm,
+                      message);
+        return;
+    }
+
+    while (query.next()) {
+        const QByteArray data = query.value(0).toByteArray();
+        const auto [wrapper, ok] = json::parse_permissive<poe::StashTabWrapper>(data);
+        if (!ok) {
+            spdlog::error("UserStore: error parsing stash");
+            return;
+        }
+        if (!wrapper.stash) {
+            spdlog::error("UserStore: stash is empty");
+            return;
+        }
+        auto stash = std::make_shared<poe::StashTab>(std::move(*wrapper.stash));
+        emit stashReceived(stash);
+    }
 }
 
 void UserStore::handleLeagueList(QString realm, std::shared_ptr<QByteArray> data)

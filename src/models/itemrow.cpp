@@ -8,8 +8,8 @@ ItemRow::ItemRow(const poe::Item &item)
     // Basics
     id = item.id.value_or("");
     name = item.name;
+    typeLine = item.typeLine;
     itemLevel = item.itemLevel.value_or(item.ilvl);
-    frameType = item.frameType;
 
     if (item.properties) {
         loadProperties(*item.properties);
@@ -54,13 +54,13 @@ void ItemRow::loadRequirements(const std::vector<poe::ItemProperty> &requirement
             case poe::ItemPropertyType::RequiredLevel:
                 requiredLevel = getValue(requirement);
                 break;
-            case poe::ItemPropertyType::RequiredStr:
+            case poe::ItemPropertyType::RequiredStrength:
                 requiredStr = getValue(requirement);
                 break;
-            case poe::ItemPropertyType::RequiredDex:
+            case poe::ItemPropertyType::RequiredDexterity:
                 requiredDex = getValue(requirement);
                 break;
-            case poe::ItemPropertyType::RequiredInt:
+            case poe::ItemPropertyType::RequiredIntelligence:
                 requiredInt = getValue(requirement);
                 break;
             default:

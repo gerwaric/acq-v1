@@ -5,7 +5,7 @@
 
 #include "util/spdlog_qt.h"
 
-ACQUISITION_USE_SPDLOG // prevents an unused header warning in Qt Creator
+static_assert(ACQUISITION_USE_SPDLOG);
 
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -13,13 +13,12 @@ ACQUISITION_USE_SPDLOG // prevents an unused header warning in Qt Creator
 #include <QDir>
 #include <QString>
 #include <QUrl>
+// hello;
 
 #ifdef QT_DEBUG
-    constexpr spdlog::level::level_enum DEFAULT_LOG_LEVEL
-    = spdlog::level::debug;
+constexpr auto DEFAULT_LOG_LEVEL = spdlog::level::debug;
 #else
-    constexpr spdlog::level::level_enum DEFAULT_LOG_LEVEL
-    = spdlog::level::info;
+constexpr auto DEFAULT_LOG_LEVEL = spdlog::level::info;
 #endif
 
 void dumpQrcDirectory(const QString &path)

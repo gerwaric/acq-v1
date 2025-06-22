@@ -3,16 +3,10 @@
 
 #include "app.h"
 
-#include "models/itemrow.h"
-
 #include "util/json.h"
 #include "util/spdlog_qt.h"
 
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
-
-ACQUISITION_USE_SPDLOG
+static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
 
 App::App(QObject *parent)
     : QObject(parent)
@@ -30,16 +24,6 @@ App::App(QObject *parent)
 
     spdlog::info("App: creating items store");
 
-    createItemsStore();
-
-    QSqlDatabase db = QSqlDatabase::database("items_store");
-
-    m_itemsModel = new QSqlTableModel(this, db);
-    m_itemsModel->setTable("items");
-    m_itemsModel->select();
-    m_itemsModel->setHeaderData(0, Qt::Horizontal, "Armour");
-    m_itemsModel->setHeaderData(1, Qt::Horizontal, "Evasion");
-    m_itemsModel->setHeaderData(1, Qt::Horizontal, "Energy Shield");
 }
 
 void App::authenticate()
@@ -140,8 +124,9 @@ void App::accessGranted(const OAuthToken &token)
 
     connect(m_userStore, &UserStore::leagueListReceived, this, &App::handleLeagueList);
     connect(m_userStore, &UserStore::characterListReceived, this, &App::handleCharacterList);
-    connect(m_userStore, &UserStore::stashListReceived, this, &App::handleStashList);
     connect(m_userStore, &UserStore::characterReceived, this, &App::handleCharacter);
+    connect(m_userStore, &UserStore::stashListReceived, this, &App::handleStashList);
+    connect(m_userStore, &UserStore::stashReceived, this, &App::handleStash);
 
     m_userStore->loadCharacterList(m_realm);
     m_userStore->loadLeagueList(m_realm);
@@ -188,25 +173,16 @@ void App::handleCharacter(poe::CharacterPtr character)
         spdlog::error("App: character pointer is null");
         return;
     }
-    if (character->inventory) {
-        QSqlDatabase db = QSqlDatabase::database("items_store");
-        QSqlQuery query(db);
-        for (const auto &item : *character->inventory) {
-            const QString pretty_name = item.name.isEmpty() ? item.typeLine
-                                                            : item.name + " " + item.typeLine;
-            spdlog::info("{}: {}", character->name, pretty_name);
-            ItemRow row(item);
-            query.prepare("INSERT INTO items (armour, evasion, energyShield) VALUES (?, ?, ?)");
-            query.bindValue(0, row.armour);
-            query.bindValue(1, row.evasionRating);
-            query.bindValue(2, row.energyShield);
-            if (!query.exec()) {
-                const QString message = query.lastError().text();
-                spdlog::error("App: error inserting item: {}", message);
-                return;
-            }
-        }
+    m_model.appendCharacter(*character);
+}
+
+void App::handleStash(poe::StashTabPtr stash)
+{
+    if (!stash) {
+        spdlog::error("App: stash pointer is null");
+        return;
     }
+    m_model.appendStash(*stash);
 }
 
 void App::handleStashList(poe::StashListPtr stashes)
@@ -219,28 +195,12 @@ void App::handleStashList(poe::StashListPtr stashes)
     emit stashesUpdated();
 }
 
-void App::loadCurrentCharacter()
+void App::loadSelectedCharacters()
 {
     m_userStore->loadCharacters(m_realm, m_league);
 }
 
-void App::createItemsStore()
+void App::loadSelectedStashes()
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "items_store");
-    db.setDatabaseName(":memory:");
-    if (!db.open()) {
-        const QString message = db.lastError().text();
-        spdlog::error("App: unable to create items store: {}", message);
-        return;
-    }
-
-    QSqlQuery query(db);
-    if (!query.exec("CREATE TABLE items ("
-                    "armour INTEGER,"
-                    "evasion INTEGER,"
-                    "energyShield INTEGER"
-                    ")")) {
-        const QString message = query.lastError().text();
-        spdlog::error("App: error creating items store: {}", message);
-    }
+    m_userStore->loadStashes(m_realm, m_league);
 }

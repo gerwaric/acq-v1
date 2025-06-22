@@ -7,7 +7,7 @@
 
 #include "util/spdlog_qt.h"
 
-ACQUISITION_USE_SPDLOG
+static_assert(ACQUISITION_USE_SPDLOG); // Prevents unused header warnings in Qt Creator.
 
 NetworkManager::NetworkManager(QObject *parent)
     : QNetworkAccessManager(parent) {};

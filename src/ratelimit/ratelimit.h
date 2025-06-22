@@ -126,5 +126,5 @@ namespace RateLimit {
 
 // Create a formatter so we can use RateLimit::Status with spdlog.
 template<>
-struct fmt::formatter<RateLimit::Status, char> : EnumFormatter<RateLimit::Status>
+struct fmt::formatter<RateLimit::Status, char> : QtEnumFormatter<RateLimit::Status>
 {};

@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 import QtQuick
-import QtQuick.Controls 2.15
+import QtQuick.Controls
 import QtQuick.Layouts
 
 import Acquisition
 
 ApplicationWindow {
     id: window
-    width: 640
-    height: 480
+    width: 800
+    height: 600
     visible: true
     title: "Acquisition " + App.version
 
@@ -30,44 +30,33 @@ ApplicationWindow {
 
         MainControlPanel {}
 
-        Frame {
-            Layout.fillHeight: parent
-            Layout.fillWidth: parent
-            TableView {
-                anchors.fill: parent
+        ColumnLayout {
+            id: resultsPanel
+            SplitView.fillWidth: true
+
+            HorizontalHeaderView {
+                id: itemsHeader
                 clip: true
-                columnSpacing: 1
-                rowSpacing: 1
+                syncView: itemsView
+                Layout.fillWidth: true
+            }
+
+            TreeView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                id: itemsView
+                clip: true
+                boundsMovement: Flickable.StopAtBounds
+
                 model: App.itemsModel
 
-                delegate: Row {
-                     spacing: 1
-                     Rectangle {
-                         width: 100; height: 30
-                         color: "white"; border.width: 1
-                         Text {
-                             anchors.centerIn: parent
-                             text: modelData.armour
-                         }
-                     }
-                     Rectangle {
-                         width: 100; height: 30
-                         color: "white"; border.width: 1
-                         Text {
-                             anchors.centerIn: parent
-                             text: model.evasion
-                         }
-                     }
-                     Rectangle {
-                         width: 100; height: 30
-                         color: "white"; border.width: 1
-                         Text {
-                             anchors.centerIn: parent
-                             text: model.energyShield
-                         }
-                     }
-                }
-            }
+                delegate: TreeViewDelegate {}
+
+                ScrollBar.horizontal: ScrollBar {}
+                ScrollBar.vertical:   ScrollBar {}
+
+           }
+
         }
     }
 

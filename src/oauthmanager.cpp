@@ -6,7 +6,7 @@
 #include "networkmanager.h"
 #include "util/spdlog_qt.h"
 
-ACQUISITION_USE_SPDLOG
+static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
 
 #include <QByteArray>
 #include <QDesktopServices>

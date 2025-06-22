@@ -25,7 +25,7 @@ signals:
     void characterListReceived(poe::CharacterListPtr characters);
     void characterReceived(poe::CharacterPtr);
     void stashListReceived(poe::StashListPtr);
-    void stashTabReceived(poe::StashTabPtr);
+    void stashReceived(poe::StashTabPtr);
 
 public slots:
     void handleLeagueList(QString realm, std::shared_ptr<QByteArray> data);

@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include "util/spdlog_qt.h"
+
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -13,13 +15,6 @@
 namespace poe {
 
     Q_NAMESPACE
-
-    struct League
-    {
-        QString id;
-        QString name;
-        QString realm;
-    };
 
     enum class DisplayMode : unsigned {
         NameFirst = 0,      // Name should be followed by values
@@ -46,6 +41,63 @@ namespace poe {
     };
     Q_ENUM_NS(FrameType)
 
+    enum class ItemPropertyType : unsigned {
+        MapTier = 1,
+        ItemQuantity = 2,
+        ItemRarity = 3,
+        MonsterPackSize = 4,
+        Level = 5,
+        Quality = 6,
+        PhysicalDamage = 9,
+        ElementalDamage = 10,
+        ChaosDamage = 11,
+        CriticalStrikeChance = 12,
+        AttacksPerSecond = 13,
+        WeaponRange = 14,
+        ChanceToBlock = 15,
+        Armour = 16,
+        EvasionRating = 17,
+        EnergyShield = 18,
+        BeastiaryGenus = 21,
+        BeastiaryGroup = 22,
+        BeastieryFamily = 23,
+        Radius = 24,
+        StackSize = 32,
+        AreaLevel = 34,
+        WingsRevealed = 35,
+        EscapeRoutesRevealed = 36,
+        RewardRoomsRevealed = 37,
+        RequiredLockingLevel = 38,
+        RequiredBruteForceLevel = 39,
+        RequiredPerceptionLevel = 40,
+        RequiredDemolutionLevel = 41,
+        RequiredCounterThaumaturgyLevel = 42,
+        RequiredTrapDisarmamentLevel = 43,
+        RequiredAgilityLevel = 44,
+        RequiredDeceptionLevel = 45,
+        RequiredEngineeringLevel = 46,
+        HeistTarget = 47,
+        UltimatumSacrifice = 51,
+        UltimatumReward = 52,
+        Ward = 54,
+        RequiredClass = 57,
+        RequiredLevel = 62,
+        RequiredStrength = 63,
+        RequiredDexterity = 64,
+        RequiredIntelligence = 65,
+        ValdoMapReward = 76,
+        ValdoMapConvert = 77,
+        ValdoShaperReward = 80,    // What is this?
+        ValdoElderReward = 81,     // What is this?
+        ValdoConquerorReward = 82, // What is this?
+        ValdoUniqueReward = 83,    // What is this?
+        ValdoScarabReward = 84,    // What is this?
+        Limit = 87,
+        MoreMaps = 88,
+        MoreScarabs = 89
+    };
+    Q_ENUM_NS(ItemPropertyType)
+
     struct CrucibleNode
     {
         std::optional<unsigned> skill;                    // ? uint	mod hash
@@ -61,20 +113,6 @@ namespace poe {
         std::vector<QString> out; //	array of string	node identifiers of nodes this one connects to
         std::vector<QString> in;  //	array of string	node identifiers of nodes connected to this one
     };
-
-    enum class ItemPropertyType : unsigned {
-        Level = 5,
-        Quality = 6,
-        Armour = 16,
-        EvasionRating = 17,
-        EnergyShield = 18,
-        Experience = 20,
-        RequiredLevel = 62,
-        RequiredStr = 63,
-        RequiredDex = 64,
-        RequiredInt = 65
-    };
-    Q_ENUM_NS(ItemPropertyType)
 
     struct ItemProperty
     {
@@ -149,6 +187,8 @@ namespace poe {
 
         struct CrucibleInfo
         {
+            // TODO: WARNING: crucible nodes are usually a dictionary, but I've seen
+            // them as an array as well.
             QString layout; // string URL to an image of the tree layout
             std::unordered_map<QString, CrucibleNode>
                 nodes; // dictionary of CrucibleNode the key is the string value of the node index
@@ -223,7 +263,7 @@ namespace poe {
         std::optional<std::vector<poe::ItemProperty>> requirements;      // ? array of ItemProperty
         std::optional<std::vector<poe::ItemProperty>> additionalProperties; // ? array of ItemProperty
         //std::optional<std::vector<poe::ItemProperty>> nextLevelRequirements; // ? array of ItemProperty
-        //std::optional<int> talismanTier;                                     // ? int
+        std::optional<int> talismanTier; // ? int
         //std::optional<std::vector<poe::Item::Rewards>> rewards; // ? array of object
         //std::optional<QString> secDescrText;                                 // ? string
         //std::optional<std::vector<QString>> utilityMods;                     // ? array of string
@@ -251,7 +291,7 @@ namespace poe {
         std::optional<bool> foreseeing;   // ? bool always true if present
         //std::optional<poe::Item::IncubatingInfo> incubatedItem; // ? object
         //std::optional<poe::Item::ScourgedInfo> scourged;        // ? object
-        //std::optional<poe::Item::CrucibleInfo> crucible;        // ? object
+        //std::optional<poe::Item::CrucibleInfo> crucible; // ? object
         //std::optional<bool> ruthless;                           // ? bool always true if present
         poe::FrameType frameType;                    // ? uint as FrameType
         std::optional<QString> artFilename;          // ? string
@@ -276,6 +316,13 @@ namespace poe {
         std::optional<std::vector<poe::Item>> jewels;
     };
 
+    struct League
+    {
+        QString id;
+        QString name;
+        QString realm;
+    };
+
     struct StashTab
     {
         struct MetaData
@@ -295,6 +342,8 @@ namespace poe {
         std::optional<std::vector<poe::Item>> items;
     };
 
+    // Typedefs.
+
     using LeagueList = std::vector<League>;
     using LeagueListPtr = std::shared_ptr<const LeagueList>;
 
@@ -305,6 +354,8 @@ namespace poe {
     using StashList = std::vector<StashTab>;
     using StashListPtr = std::shared_ptr<const StashList>;
     using StashTabPtr = std::shared_ptr<const StashTab>;
+
+    // API wrappers.
 
     struct LeagueListWrapper
     {
@@ -332,3 +383,21 @@ namespace poe {
     };
 
 } // namespace poe
+
+// ----- Formatters for spdlog ------------------------------------------------------
+
+namespace fmt {
+
+    template<>
+    struct formatter<poe::DisplayMode, char> : QtEnumFormatter<poe::DisplayMode>
+    {};
+
+    template<>
+    struct formatter<poe::FrameType, char> : QtEnumFormatter<poe::FrameType>
+    {};
+
+    template<>
+    struct formatter<poe::ItemPropertyType, char> : QtEnumFormatter<poe::ItemPropertyType>
+    {};
+
+} // namespace fmt

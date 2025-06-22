@@ -14,7 +14,7 @@ struct ItemRow
     // Basics
     QString id;
     QString name;
-    poe::FrameType frameType;
+    QString typeLine;
     int itemLevel{0};
 
     // Requirements

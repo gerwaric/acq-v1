@@ -40,6 +40,25 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     # Models
     models/itemrow.cpp
     models/itemrow.h
+    # Item Model
+    model/characterinfo.cpp
+    model/characterinfo.h
+    model/characternode.cpp
+    model/characternode.h
+    model/iteminfo.cpp
+    model/iteminfo.h
+    model/itemnode.cpp
+    model/itemnode.h
+    model/rootnode.cpp
+    model/rootnode.h
+    model/stashinfo.cpp
+    model/stashinfo.h
+    model/stashnode.cpp
+    model/stashnode.h
+    model/treemodel.cpp
+    model/treemodel.h
+    model/treenode.cpp
+    model/treenode.h
     # Utilities
     util/glaze_qt.h
     util/json.h

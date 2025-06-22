@@ -1,5 +1,6 @@
-/build
+/.cache
 /.vscode
+/build
 
 .DS_Store
 .qmlls.ini

@@ -5,7 +5,7 @@
 
 #include "util/spdlog_qt.h"
 
-ACQUISITION_USE_SPDLOG // prevents an unused header warning in Qt Creator
+static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
 
 #include <QDir>
 #include <QSqlDatabase>

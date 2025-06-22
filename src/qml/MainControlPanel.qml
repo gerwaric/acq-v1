@@ -98,9 +98,17 @@ Frame {
         Button {
             Layout.columnSpan: 2
             Layout.fillWidth: parent
-            text: "Load Current Character"
+            text: "Load Characters"
             enabled: App.isAuthenticated
-            onClicked: App.loadCurrentCharacter()
+            onClicked: App.loadSelectedCharacters()
+        }
+
+        Button {
+            Layout.columnSpan: 2
+            Layout.fillWidth: parent
+            text: "Load Stashes"
+            enabled: App.isAuthenticated
+            onClicked: App.loadSelectedStashes()
         }
     }
 }

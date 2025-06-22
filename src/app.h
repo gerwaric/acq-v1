@@ -11,14 +11,17 @@
 
 #include "datastore/globalstore.h"
 #include "datastore/userstore.h"
+#include "model/treemodel.h"
 #include "ratelimit/ratelimiter.h"
 
+#include <QAbstractItemModel>
 #include <QObject>
 #include <QString>
+#include <QStringList>
 
 #include <QtQmlIntegration/qqmlintegration.h>
 
-#include <QSqlTableModel>
+#include <vector>
 
 class App : public QObject
 {
@@ -40,7 +43,7 @@ class App : public QObject
     Q_PROPERTY(QStringList characters READ getCharacterNames NOTIFY charactersUpdated)
     Q_PROPERTY(QStringList stashes READ getStashNames NOTIFY stashesUpdated)
 
-    Q_PROPERTY(QSqlTableModel *itemsModel READ getItemsModel CONSTANT);
+    Q_PROPERTY(QAbstractItemModel *itemsModel READ getItemsModel CONSTANT);
 
 public:
     App(QObject *parent = nullptr);
@@ -53,7 +56,8 @@ public:
     Q_INVOKABLE void getAllCharacters();
     Q_INVOKABLE void getAllStashes();
 
-    Q_INVOKABLE void loadCurrentCharacter();
+    Q_INVOKABLE void loadSelectedCharacters();
+    Q_INVOKABLE void loadSelectedStashes();
 
     QString getDebugLevel() const { return m_debugLevel; };
     void setDebugLevel(const QString &level) {};
@@ -66,7 +70,7 @@ public:
     QStringList getCharacterNames() const;
     QStringList getStashNames() const;
 
-    QSqlTableModel *getItemsModel() { return m_itemsModel; };
+    QAbstractItemModel *getItemsModel() { return &m_model; }
 
 signals:
     void debugLevelChanged();
@@ -83,6 +87,7 @@ private slots:
     void handleCharacterList(poe::CharacterListPtr characters);
     void handleCharacter(poe::CharacterPtr character);
     void handleStashList(poe::StashListPtr stashes);
+    void handleStash(poe::StashTabPtr stash);
 
     void rateLimited(int seconds, const QString &policy_name);
 
@@ -107,6 +112,5 @@ private:
     std::vector<poe::Character> m_characterList;
     std::vector<poe::StashTab> m_stashList;
 
-    void createItemsStore();
-    QSqlTableModel *m_itemsModel;
+    TreeModel m_model;
 };
