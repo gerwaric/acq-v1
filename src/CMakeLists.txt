@@ -37,9 +37,6 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     poeclient.h
     settingsmanager.cpp
     settingsmanager.h
-    # Models
-    models/itemrow.cpp
-    models/itemrow.h
     # Item Model
     model/characterinfo.cpp
     model/characterinfo.h
