@@ -8,6 +8,9 @@
 class RootNode : public TreeNode
 {
 public:
-    explicit RootNode(const QString& name, TreeNode* parent = nullptr);
+    explicit RootNode(const QString &name, TreeNode *parent = nullptr);
+
     ~RootNode() override {};
+
+    inline int columnCount() const override { return 1; }
 };

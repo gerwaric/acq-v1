@@ -12,7 +12,10 @@ class StashNode : public TreeNode
 public:
 	explicit StashNode(const poe::StashTab& stash, TreeNode* parent);
     ~StashNode() override {};
+
+    inline int columnCount() const override { return 1; }
     QVariant data(int column) const override;
+
 private:
     const StashInfo m_stashInfo;
 };

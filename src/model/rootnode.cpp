@@ -3,7 +3,7 @@
 
 #include "model/rootnode.h"
 
-RootNode::RootNode(const QString& name, TreeNode* parent)
-    : TreeNode(NodeType::Root, name, parent)
+RootNode::RootNode(const QString &name, TreeNode *parent)
+    : TreeNode(name, parent)
 {
 }

@@ -26,7 +26,7 @@ public:
     // Returns the number of rows under the given parent. When the parent is valid it means that rowCount is returning the number of children of parent.
     inline int rowCount(const QModelIndex& parent = QModelIndex()) const override {
         return getNode(parent)->childCount();
-    };
+    }
 
     // Returns the number of columns for the children of the given parent.
     inline int columnCount(const QModelIndex &parent = QModelIndex()) const override
@@ -43,17 +43,17 @@ public:
 
     inline bool hasChildren(const QModelIndex &parent = QModelIndex()) const override {
         return getNode(parent)->hasChildren();
-    };
+    }
 
     // Returns the data for the given role and section in the header with the specified orientation.
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-    void appendStash(const poe::StashTab &stash);
-    void appendCharacter(const poe::Character &character);
-
     inline const TreeNode* getNode(const QModelIndex& index) const {
         return index.isValid() ? static_cast<TreeNode*>(index.internalPointer()) : &m_root;
-    };
+    }
+
+    void appendStash(const poe::StashTab &stash);
+    void appendCharacter(const poe::Character &character);
 
 private:
     RootNode m_root;

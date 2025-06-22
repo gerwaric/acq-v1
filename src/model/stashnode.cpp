@@ -10,7 +10,7 @@
 static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
 
 StashNode::StashNode(const poe::StashTab &stash, TreeNode *parent)
-    : TreeNode(NodeType::Stash, stash.name, parent)
+    : TreeNode(stash.name, parent)
     , m_stashInfo(stash)
 {
 	spdlog::trace("Creating StashNode for {} under {}", stash.name, parent->name());

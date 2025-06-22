@@ -13,7 +13,7 @@ public:
 	explicit ItemNode(const poe::Item& item, TreeNode* parent);
     ~ItemNode() override {};
 
-    //inline int columnCount() const override { return ItemInfo::ColumnCount; };
+    inline int columnCount() const override { return ItemInfo::ColumnCount; }
     QVariant data(int column) const override;
 
 private:

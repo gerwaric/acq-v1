@@ -4,7 +4,7 @@
 #include "model/itemnode.h"
 
 ItemNode::ItemNode(const poe::Item &item, TreeNode *parent)
-    : TreeNode(NodeType::Item, item.baseType, parent)
+    : TreeNode(item.baseType, parent)
     , m_itemInfo(item)
 {
     if (item.socketedItems) {
