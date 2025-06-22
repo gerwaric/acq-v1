@@ -82,7 +82,7 @@ Frame {
         Button {
             Layout.columnSpan: 2
             Layout.fillWidth: parent
-            text: "Get All Character"
+            text: "Fetch Character from GGG"
             enabled: App.isAuthenticated
             onClicked: App.getAllCharacters()
         }
@@ -90,7 +90,7 @@ Frame {
         Button {
             Layout.columnSpan: 2
             Layout.fillWidth: parent
-            text: "Get All Stashes"
+            text: "Fetch Stashes from GGG"
             enabled: App.isAuthenticated
             onClicked: App.getAllStashes()
         }
@@ -98,7 +98,7 @@ Frame {
         Button {
             Layout.columnSpan: 2
             Layout.fillWidth: parent
-            text: "Load Characters"
+            text: "Load Characters from database"
             enabled: App.isAuthenticated
             onClicked: App.loadSelectedCharacters()
         }
@@ -106,7 +106,7 @@ Frame {
         Button {
             Layout.columnSpan: 2
             Layout.fillWidth: parent
-            text: "Load Stashes"
+            text: "Load Stashes from database"
             enabled: App.isAuthenticated
             onClicked: App.loadSelectedStashes()
         }

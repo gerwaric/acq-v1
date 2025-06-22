@@ -7,11 +7,12 @@
 #include "model/iteminfo.h"
 #include "model/stashnode.h"
 
-TreeModel::TreeModel(QObject* parent)
+TreeModel::TreeModel(QObject *parent)
     : QAbstractItemModel(parent)
     , m_root("Root")
-    , m_character_root(m_root.addChild<RootNode>("Characters"))
-    , m_stash_root(m_root.addChild<RootNode>("Stash Tabs")) {}
+    , m_characters(m_root.addChild<RootNode>("Characters"))
+    , m_stashes(m_root.addChild<RootNode>("Stash Tabs"))
+{}
 
 QModelIndex TreeModel::index(int row, int column, const QModelIndex& parent) const
 {
@@ -50,18 +51,18 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
 
 void TreeModel::appendCharacter(const poe::Character& character)
 {
-    const int k = m_character_root.childCount();
-    const QModelIndex parent_index = createIndex(0, 0, &m_character_root);
+    const int k = m_characters.childCount();
+    const QModelIndex parent_index = createIndex(0, 0, &m_characters);
     beginInsertRows(parent_index, k, k);
-    m_character_root.addChild<CharacterNode>(character);
+    m_characters.addChild<CharacterNode>(character);
     endInsertRows();
 }
 
 void TreeModel::appendStash(const poe::StashTab& stash)
 {
-    const int k = m_stash_root.childCount();
-    const QModelIndex parent_index = createIndex(0, 0, &m_stash_root);
+    const int k = m_stashes.childCount();
+    const QModelIndex parent_index = createIndex(0, 0, &m_stashes);
     beginInsertRows(parent_index, k, k);
-    m_stash_root.addChild<StashNode>(stash);
+    m_stashes.addChild<StashNode>(stash);
     endInsertRows();
 }

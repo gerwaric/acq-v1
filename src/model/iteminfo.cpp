@@ -83,21 +83,6 @@ void ItemInfo::loadProperties(const poe::Item &item, ItemInfo &i)
         return;
     }
 
-    if (item.frameType == poe::FrameType::Quest) {
-        spdlog::debug("ItemInfo: ignoring quest item properties: {}", i.prettyName);
-        return;
-    }
-
-    if (item.baseType.startsWith("Blueprint")) {
-        //spdlog::debug("ItemInfo: ignoring blueprint properties: {}", i.prettyName);
-        //return;
-    }
-
-    if (item.baseType.startsWith("Contract")) {
-        //spdlog::debug("ItemInfo: ignoring contract properties: {}", i.prettyName);
-        //return;
-    }
-
     float avg_phys_hit = 0;
     float avg_ele_hit = 0;
     float avg_chaos_hit = 0;

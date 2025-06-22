@@ -5,7 +5,7 @@
 
 ItemNode::ItemNode(const poe::Item &item, TreeNode *parent)
     : TreeNode(NodeType::Item, item.baseType, parent)
-    , m_itemInfo(std::make_unique<ItemInfo>(item))
+    , m_itemInfo(item)
 {
     if (item.socketedItems) {
         addChildren<ItemNode>(item.socketedItems.value());
@@ -16,7 +16,7 @@ QVariant ItemNode::data(int column) const
 {
     const bool valid = (column >= 0) && (column < ItemInfo::ColumnCount);
     if (valid) {
-        return ItemInfo::Columns[column].getter(*m_itemInfo);
+        return ItemInfo::Columns[column].getter(m_itemInfo);
     } else {
         return QVariant();
     }

@@ -11,7 +11,7 @@
 
 struct StashInfo
 {
-    StashInfo(poe::StashTab &stash);
+    StashInfo(const poe::StashTab &stash);
 
     QString id;
     std::optional<QString> parent;

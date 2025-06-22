@@ -3,7 +3,7 @@
 
 #include "model/stashinfo.h"
 
-StashInfo::StashInfo(poe::StashTab &stash)
+StashInfo::StashInfo(const poe::StashTab &stash)
 {
     id = stash.id;
     parent = stash.parent;

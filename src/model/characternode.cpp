@@ -11,9 +11,9 @@
 
 static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
 
-CharacterNode::CharacterNode(const poe::Character& character, TreeNode* parent)
+CharacterNode::CharacterNode(const poe::Character &character, TreeNode *parent)
     : TreeNode(NodeType::Character, character.name, parent)
-    //, m_character(character)
+    , m_characterInfo(character)
 {
 	spdlog::trace("Creating CharacterNode for {} under {}", character.name, parent->name());
 

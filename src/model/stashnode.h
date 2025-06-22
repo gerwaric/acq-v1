@@ -14,6 +14,5 @@ public:
     ~StashNode() override {};
     QVariant data(int column) const override;
 private:
-	//const poe::StashTab& m_stash;
-    std::unique_ptr<StashInfo> m_stashInfo;
+    const StashInfo m_stashInfo;
 };

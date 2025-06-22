@@ -14,5 +14,5 @@ public:
     ~CharacterNode() override {};
 private:
 	void addCollection(const QString& name, const std::vector<poe::Item>& items);
-    std::unique_ptr<CharacterInfo> m_character_info;
+    const CharacterInfo m_characterInfo;
 };

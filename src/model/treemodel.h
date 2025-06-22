@@ -57,6 +57,6 @@ public:
 
 private:
     RootNode m_root;
-    TreeNode& m_character_root;
-    TreeNode& m_stash_root;
+    TreeNode &m_characters;
+    TreeNode &m_stashes;
 };
