@@ -149,11 +149,11 @@ void ItemInfo::loadProperties(const poe::Item &item, ItemInfo &i)
         case poe::ItemPropertyType::UltimatumReward:
         case poe::ItemPropertyType::ValdoMapReward:
         case poe::ItemPropertyType::ValdoMapConvert:
-        case poe::ItemPropertyType::ValdoShaperReward:    // What is this?
-        case poe::ItemPropertyType::ValdoElderReward:     // What is this?
-        case poe::ItemPropertyType::ValdoConquerorReward: // What is this?
-        case poe::ItemPropertyType::ValdoUniqueReward:    // What is this?
-        case poe::ItemPropertyType::ValdoScarabReward:    // What is this?
+        case poe::ItemPropertyType::ValdoShaperReward:   
+        case poe::ItemPropertyType::ValdoElderReward:    
+        case poe::ItemPropertyType::ValdoConquerorReward:
+        case poe::ItemPropertyType::ValdoUniqueReward:    
+        case poe::ItemPropertyType::ValdoScarabReward: 
             ok = true;
             break;
         }

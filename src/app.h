@@ -43,15 +43,13 @@ class App : public QObject
     Q_PROPERTY(QStringList characters READ getCharacterNames NOTIFY charactersUpdated)
     Q_PROPERTY(QStringList stashes READ getStashNames NOTIFY stashesUpdated)
 
-    Q_PROPERTY(QAbstractItemModel *itemsModel READ getItemsModel CONSTANT);
+    Q_PROPERTY(PoeClient *poeClient READ getPoeClient CONSTANT)
+    Q_PROPERTY(QAbstractItemModel *itemsModel READ getItemsModel CONSTANT)
 
 public:
     App(QObject *parent = nullptr);
 
     Q_INVOKABLE void authenticate();
-    Q_INVOKABLE void listLeagues();
-    Q_INVOKABLE void listCharacters();
-    Q_INVOKABLE void listStashes();
     Q_INVOKABLE void getCharacter();
     Q_INVOKABLE void getAllCharacters();
     Q_INVOKABLE void getAllStashes();
@@ -60,11 +58,17 @@ public:
     Q_INVOKABLE void loadSelectedStashes();
 
     QString getDebugLevel() const { return m_debugLevel; };
-    void setDebugLevel(const QString &level) {};
+    void setDebugLevel(const QString &level)
+    {
+        m_debugLevel = level;
+        spdlog::set_level(spdlog::level::from_str(level.toUtf8().toStdString()));
+        spdlog::info("App: logging level set to {}", spdlog::get_level());
+    };
 
     QString version() const { return APP_VERSION_STRING; };
     bool isAuthenticated() const { return m_authenticated; };
     QString getUsername() const { return m_username; };
+    PoeClient *getPoeClient() { return &m_poeClient; };
 
     QStringList getLeagueNames() const;
     QStringList getCharacterNames() const;
@@ -83,11 +87,30 @@ signals:
 private slots:
     void accessGranted(const OAuthToken &token);
 
-    void handleLeagueList(poe::LeagueListPtr leagues);
-    void handleCharacterList(poe::CharacterListPtr characters);
-    void handleCharacter(poe::CharacterPtr character);
-    void handleStashList(poe::StashListPtr stashes);
-    void handleStash(poe::StashTabPtr stash);
+    void handleLeagueList(const QString &realm,
+                          const std::vector<poe::League> &leagues,
+                          const QByteArray &data);
+
+    void handleCharacterList(const QString &realm,
+                             const std::vector<poe::Character> &characters,
+                             const QByteArray &data);
+
+    void handleCharacter(const QString &realm,
+                         const QString &name,
+                         const std::optional<poe::Character> &character,
+                         const QByteArray &data);
+
+    void handleStashList(const QString &realm,
+                         const QString &league,
+                         const std::vector<poe::StashTab> &stashes,
+                         const QByteArray &data);
+
+    void handleStash(const QString &realm,
+                     const QString &league,
+                     const QString &stash_id,
+                     const QString &substash_id,
+                     const std::optional<poe::StashTab> &stash,
+                     const QByteArray &data);
 
     void rateLimited(int seconds, const QString &policy_name);
 

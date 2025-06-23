@@ -3,11 +3,14 @@
 
 #pragma once
 
+#include <QHttpHeaders>
 #include <QIODevice>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QObject>
+#include <QString>
+#include <QStringList>
 
 class NetworkManager : public QNetworkAccessManager
 {
@@ -18,6 +21,9 @@ public:
 
     void setBearerToken(const QString &token);
 
+    static void logRequest(const QNetworkRequest &request);
+    static void logReply(const QNetworkReply *reply);
+
 protected:
     QNetworkReply *createRequest(QNetworkAccessManager::Operation op,
                                  const QNetworkRequest &originalRequest,
@@ -25,4 +31,9 @@ protected:
 
 private:
     QByteArray m_bearer_token;
+
+    using AttributeGetter = std::function<QVariant(QNetworkRequest::Attribute)>;
+
+    static void logAttributes(const QString &name, AttributeGetter attrs);
+    static void logHeaders(const QString &name, const QHttpHeaders &headers);
 };

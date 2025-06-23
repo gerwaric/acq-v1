@@ -14,7 +14,7 @@ App::App(QObject *parent)
     , m_rateLimiter(m_networkManager)
 {
     connect(&m_oauthManager, &OAuthManager::grantAccess, this, &App::accessGranted);
-    connect(&m_poeClient, &PoeClient::sendRequest, &m_rateLimiter, &RateLimiter::makeRequest);
+    connect(&m_poeClient, &PoeClient::requestReady, &m_rateLimiter, &RateLimiter::makeRequest);
     connect(&m_rateLimiter, &RateLimiter::Paused, this, &App::rateLimited);
 
     const auto [token, ok] = m_globalStore.retrieve<OAuthToken>("oauth_token");
@@ -23,27 +23,11 @@ App::App(QObject *parent)
     }
 
     spdlog::info("App: creating items store");
-
 }
 
 void App::authenticate()
 {
     m_oauthManager.initLogin();
-}
-
-void App::listLeagues()
-{
-    m_poeClient.listLeagues(m_realm);
-}
-
-void App::listCharacters()
-{
-    m_poeClient.listCharacters(m_realm);
-}
-
-void App::listStashes()
-{
-    m_poeClient.listStashes(m_realm, m_league);
 }
 
 void App::getCharacter()
@@ -60,8 +44,51 @@ void App::getAllCharacters()
 
 void App::getAllStashes()
 {
+    // TODO: Special cases for map tabs and unique tab.
+
     for (const auto &stash : m_stashList) {
+        spdlog::info("App: requesting stash '{}' ({})", stash.name, stash.id);
         m_poeClient.getStash(m_realm, m_league, stash.id, "");
+        if (stash.children) {
+            for (const auto &child : stash.children.value()) {
+                spdlog::info("App: requesting stash '{}' ({}): child of '{}' (){})",
+                             child.name,
+                             child.id,
+                             stash.name,
+                             stash.id);
+
+                // A child should have either a parent or a folder, but not both.
+                if (child.parent && child.folder) {
+                    // The child appears to have both.
+                    spdlog::warn("App: child stash '{}' ({}) has both parent ({}) and folder ({}).",
+                                 child.name,
+                                 child.id,
+                                 child.parent.value_or(""),
+                                 child.folder.value_or(""));
+                } else if ((!child.parent) && (!child.folder)) {
+                    // The child appears to have neither.
+                    spdlog::warn("App: child stash '{}' ({}) has neither parent nor folder",
+                                 child.name,
+                                 child.id);
+                }
+
+                // We only use substash id for children with a parent.
+                if (child.parent) {
+                    m_poeClient.getStash(m_realm, m_league, stash.id, child.id);
+                } else {
+                    m_poeClient.getStash(m_realm, m_league, child.id, "");
+                }
+
+                // We don't support grandchildren right now.
+                if (child.children) {
+                    spdlog::error("App: stash '{}' ({}) child '{}' ({}) also has children.",
+                                  stash.name,
+                                  stash.id,
+                                  child.name,
+                                  child.id);
+                }
+            }
+        }
     }
 }
 
@@ -93,6 +120,14 @@ QStringList App::getStashNames() const
     names.reserve(m_stashList.size());
     for (const auto &stash : m_stashList) {
         names.append(stash.name);
+        if (stash.children) {
+            for (const auto &child : stash.children.value()) {
+                names.append(stash.name + " / " + child.name);
+                if (child.children) {
+                    spdlog::error("App: stash child has children");
+                }
+            }
+        }
     }
     return names;
 }
@@ -113,20 +148,20 @@ void App::accessGranted(const OAuthToken &token)
     }
     m_userStore = new UserStore(m_username, this);
 
-    connect(&m_poeClient, &PoeClient::leagueListReceived, m_userStore, &UserStore::handleLeagueList);
+    connect(&m_poeClient, &PoeClient::leagueListReceived, m_userStore, &UserStore::saveLeagueList);
     connect(&m_poeClient,
             &PoeClient::characterListReceived,
             m_userStore,
-            &UserStore::handleCharacterList);
-    connect(&m_poeClient, &PoeClient::stashListReceived, m_userStore, &UserStore::handleStashList);
-    connect(&m_poeClient, &PoeClient::characterReceived, m_userStore, &UserStore::handleCharacter);
-    connect(&m_poeClient, &PoeClient::stashReceived, m_userStore, &UserStore::handleStash);
+            &UserStore::saveCharacterList);
+    connect(&m_poeClient, &PoeClient::stashListReceived, m_userStore, &UserStore::saveStashList);
+    connect(&m_poeClient, &PoeClient::characterReceived, m_userStore, &UserStore::saveCharacter);
+    connect(&m_poeClient, &PoeClient::stashReceived, m_userStore, &UserStore::saveStash);
 
-    connect(m_userStore, &UserStore::leagueListReceived, this, &App::handleLeagueList);
-    connect(m_userStore, &UserStore::characterListReceived, this, &App::handleCharacterList);
-    connect(m_userStore, &UserStore::characterReceived, this, &App::handleCharacter);
-    connect(m_userStore, &UserStore::stashListReceived, this, &App::handleStashList);
-    connect(m_userStore, &UserStore::stashReceived, this, &App::handleStash);
+    connect(&m_poeClient, &PoeClient::leagueListReceived, this, &App::handleLeagueList);
+    connect(&m_poeClient, &PoeClient::characterListReceived, this, &App::handleCharacterList);
+    connect(&m_poeClient, &PoeClient::characterReceived, this, &App::handleCharacter);
+    connect(&m_poeClient, &PoeClient::stashListReceived, this, &App::handleStashList);
+    connect(&m_poeClient, &PoeClient::stashReceived, this, &App::handleStash);
 
     m_userStore->loadCharacterList(m_realm);
     m_userStore->loadLeagueList(m_realm);
@@ -138,60 +173,65 @@ void App::accessGranted(const OAuthToken &token)
 
 void App::rateLimited(int seconds, const QString &policy_name)
 {
-    if (seconds <= 0) {
-        m_rateLimitStatus = "Not rate limited.";
-    } else {
-        m_rateLimitStatus = QString("Rate limited for %1 seconds: %2")
-                                .arg(QString::number(seconds), policy_name);
-    }
+    m_rateLimitStatus = (seconds <= 0) ? "Not rate limited."
+                                       : QString("Rate limited for %1 seconds by %2 policy.")
+                                             .arg(QString::number(seconds), policy_name);
     emit rateLimitStatusChanged();
 }
 
-void App::handleLeagueList(poe::LeagueListPtr leagues)
+void App::handleLeagueList(const QString &realm,
+                           const std::vector<poe::League> &leagues,
+                           const QByteArray &data)
 {
-    if (!leagues) {
-        spdlog::error("App: leagues list pointer is null");
-        return;
-    }
-    m_leagueList = *leagues;
+    m_leagueList = leagues;
     emit leaguesUpdated();
 }
 
-void App::handleCharacterList(poe::CharacterListPtr characters)
+void App::handleCharacterList(const QString &realm,
+                              const std::vector<poe::Character> &characters,
+                              const QByteArray &data)
 {
-    if (!characters) {
-        spdlog::error("App: character list pointer is null");
-        return;
-    }
-    m_characterList = *characters;
+    m_characterList = characters;
     emit charactersUpdated();
 }
 
-void App::handleCharacter(poe::CharacterPtr character)
+void App::handleCharacter(const QString &realm,
+                          const QString &name,
+                          const std::optional<poe::Character> &character,
+                          const QByteArray &data)
 {
-    if (!character) {
-        spdlog::error("App: character pointer is null");
-        return;
+    if (character) {
+        m_model.appendCharacter(character.value());
+    } else {
+        spdlog::error("App: character is empty: realm({}) name({})", realm, name);
     }
-    m_model.appendCharacter(*character);
 }
 
-void App::handleStash(poe::StashTabPtr stash)
+void App::handleStash(const QString &realm,
+                      const QString &league,
+                      const QString &stash_id,
+                      const QString &substash_id,
+                      const std::optional<poe::StashTab> &stash,
+                      const QByteArray &data)
 {
-    if (!stash) {
-        spdlog::error("App: stash pointer is null");
-        return;
+    if (stash) {
+        m_model.appendStash(stash.value());
+    } else {
+        spdlog::error("App: stash is empty: realm({}) league({}) stash_id({}) substash_id({})",
+                      realm,
+                      league,
+                      stash_id,
+                      substash_id);
     }
-    m_model.appendStash(*stash);
 }
 
-void App::handleStashList(poe::StashListPtr stashes)
+void App::handleStashList(const QString &realm,
+                          const QString &league,
+                          const std::vector<poe::StashTab> &stashes,
+                          const QByteArray &data)
 {
-    if (!stashes) {
-        spdlog::error("App: stash list pointer is null");
-        return;
-    }
-    m_stashList = *stashes;
+    spdlog::info("App: received a list of stashes with {} items.", stashes.size());
+    m_stashList = stashes;
     emit stashesUpdated();
 }
 

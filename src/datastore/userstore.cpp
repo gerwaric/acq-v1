@@ -74,8 +74,7 @@ void UserStore::loadLeagueList(const QString &realm)
         spdlog::error("UserStore: error parsing league list");
         return;
     };
-    auto leagues = std::make_shared<poe::LeagueList>(std::move(wrapper.leagues));
-    emit leagueListReceived(leagues);
+    emit leagueListReceived(wrapper.leagues);
 }
 
 void UserStore::loadCharacterList(const QString &realm)
@@ -105,8 +104,7 @@ void UserStore::loadCharacterList(const QString &realm)
         spdlog::error("UserStore: error parsing character list");
         return;
     };
-    auto characters = std::make_shared<poe::CharacterList>(std::move(wrapper.characters));
-    emit characterListReceived(characters);
+    emit characterListReceived(wrapper.characters);
 }
 
 void UserStore::loadCharacters(const QString &realm, const QString &league)
@@ -139,8 +137,7 @@ void UserStore::loadCharacters(const QString &realm, const QString &league)
             spdlog::error("UserStore: character is empty");
             return;
         }
-        auto character = std::make_shared<poe::Character>(std::move(*wrapper.character));
-        emit characterReceived(character);
+        emit characterReceived(wrapper.character.value());
     }
 }
 
@@ -179,8 +176,7 @@ void UserStore::loadStashList(const QString &realm, const QString &league)
         spdlog::error("UserStore: error parsing stash list");
         return;
     };
-    auto stashes = std::make_shared<poe::StashList>(std::move(wrapper.stashes));
-    emit stashListReceived(stashes);
+    emit stashListReceived(wrapper.stashes);
 }
 
 void UserStore::loadStashes(const QString &realm, const QString &league)
@@ -213,87 +209,53 @@ void UserStore::loadStashes(const QString &realm, const QString &league)
             spdlog::error("UserStore: stash is empty");
             return;
         }
-        auto stash = std::make_shared<poe::StashTab>(std::move(*wrapper.stash));
-        emit stashReceived(stash);
+        emit stashReceived(wrapper.stash.value());
     }
 }
 
-void UserStore::handleLeagueList(QString realm, std::shared_ptr<QByteArray> data)
+void UserStore::saveLeagueList(const QString &realm,
+                               const std::vector<poe::League> &leagues,
+                               const QByteArray &data)
 {
-    if (!data) {
-        spdlog::error("UserStore: league list data is null");
-        return;
-    }
-    const auto [wrapper, ok] = json::parse_permissive<poe::LeagueListWrapper>(*data);
-    if (!ok) {
-        spdlog::error("UserStore: error parsing league list");
-        return;
-    };
-    updateIndex("leagues", realm, "", *data);
-    auto leagues = std::make_shared<poe::LeagueList>(std::move(wrapper.leagues));
+    updateIndex("leagues", realm, "", data);
     emit leagueListReceived(leagues);
 }
 
-void UserStore::handleCharacterList(QString realm, std::shared_ptr<QByteArray> data)
+void UserStore::saveCharacterList(const QString &realm,
+                                  const std::vector<poe::Character> &characters,
+                                  const QByteArray &data)
 {
-    if (!data) {
-        spdlog::error("UserStore: character list data is null");
-        return;
-    }
-    const auto [wrapper, ok] = json::parse_permissive<poe::CharacterListWrapper>(*data);
-    if (!ok) {
-        spdlog::error("UserStore: error parsing character list");
-        return;
-    }
-    updateIndex("characters", realm, "", *data);
-    auto characters = std::make_shared<poe::CharacterList>(wrapper.characters);
+    updateIndex("characters", realm, "", data);
     emit characterListReceived(characters);
 }
 
-void UserStore::handleStashList(QString realm, QString league, std::shared_ptr<QByteArray> data)
+void UserStore::saveStashList(const QString &realm,
+                              const QString &league,
+                              const std::vector<poe::StashTab> &stashes,
+                              const QByteArray &data)
 {
-    if (!data) {
-        spdlog::error("UserStore: stash list data is null");
-        return;
-    }
-    const auto [wrapper, ok] = json::parse_permissive<poe::StashListWrapper>(*data);
-    if (!ok) {
-        spdlog::error("UserStore: error parsing stash list");
-        return;
-    }
-    updateIndex("stashes", realm, league, *data);
-    auto stashes = std::make_shared<poe::StashList>(std::move(wrapper.stashes));
+    updateIndex("stashes", realm, league, data);
     emit stashListReceived(stashes);
 };
 
-void UserStore::handleCharacter(QString realm, QString name, std::shared_ptr<QByteArray> data)
+void UserStore::saveCharacter(const QString &realm,
+                              const QString &name,
+                              const std::optional<poe::Character> &character,
+                              const QByteArray &data)
 {
-    spdlog::trace("UserStore::handleCharacter(): realm='{}' name='{}'", realm, name);
-
-    if (!data) {
-        spdlog::error("UserStore: character data is null.");
-    }
-
-    const auto [wrapper, ok] = json::parse_permissive<poe::CharacterWrapper>(*data);
-    if (!ok) {
-        spdlog::error("UserStore: error parsing character.");
-        return;
-    }
-    if (!wrapper.character) {
-        spdlog::error("UserStore: character is missing.");
+    if (!character) {
+        spdlog::error("UserStore: recieved empty character");
         return;
     }
 
-    const poe::Character &character = *wrapper.character;
-
-    if (realm != character.realm) {
+    if (realm != character->realm) {
         spdlog::warn("UserStore: using character realm '{}' but found '{}': {}",
                      realm,
-                     character.realm,
-                     *data);
+                     character->realm,
+                     data);
     }
-    if (name != character.name) {
-        spdlog::warn("UserStore: using character name '{}' but found '{}'", name, character.name);
+    if (name != character->name) {
+        spdlog::warn("UserStore: using character name '{}' but found '{}'", name, character->name);
     }
 
     const QString stmt = "INSERT OR REPLACE INTO characters"
@@ -303,12 +265,12 @@ void UserStore::handleCharacter(QString realm, QString name, std::shared_ptr<QBy
     auto db = getThreadLocalDatabase();
     auto query = QSqlQuery(db);
     query.prepare(stmt);
-    query.bindValue(0, character.id);
+    query.bindValue(0, character->id);
     query.bindValue(1, name);
     query.bindValue(2, realm);
-    query.bindValue(3, character.league.value_or(""));
+    query.bindValue(3, character->league.value_or(""));
     query.bindValue(4, QDateTime::currentDateTime());
-    query.bindValue(5, *data);
+    query.bindValue(5, data);
 
     if (!query.exec()) {
         const QString message = query.lastError().text();
@@ -319,36 +281,31 @@ void UserStore::handleCharacter(QString realm, QString name, std::shared_ptr<QBy
     }
 }
 
-void UserStore::handleStash(QString realm,
-                            QString league,
-                            QString stash_id,
-                            QString substash_id,
-                            std::shared_ptr<QByteArray> data)
+void UserStore::saveStash(const QString &realm,
+                          const QString &league,
+                          const QString &stash_id,
+                          const QString &substash_id,
+                          const std::optional<poe::StashTab> &stash,
+                          const QByteArray &data)
 {
-    spdlog::trace("UserStore::handleStash() realm='{}' league='{}' stash_id='{}' substash_id='{}'",
-                  realm,
-                  league,
-                  stash_id,
-                  substash_id);
-
-    if (!data) {
-        spdlog::error("UserStore: stash data is null.");
-    }
-
-    const auto [wrapper, ok] = json::parse_permissive<poe::StashTabWrapper>(*data);
-    if (!ok) {
-        spdlog::error("UserStore: error parsing stash.");
-        return;
-    }
-    if (!wrapper.stash) {
-        spdlog::error("UserStore: stash is missing");
+    if (!stash) {
+        spdlog::error("UserStore: recieved empty stash");
         return;
     }
 
-    const poe::StashTab &stash = *wrapper.stash;
+    const QString id = substash_id.isEmpty() ? stash_id : substash_id;
+    const QString parent_id = substash_id.isEmpty() ? "" : stash_id;
 
-    if (stash_id != stash.id) {
-        spdlog::warn("UserStore: using stash id '{}' but found '{}'", stash_id, stash.id);
+    if (stash->id != id) {
+        spdlog::warn("UserStore: expected stash '{}' but received '{}'", id, stash->id);
+    }
+
+    if (stash->parent) {
+        if (stash->parent.value() != id) {
+            spdlog::warn("UserStore: expected stash parent '{}' but received '{}'",
+                         parent_id,
+                         stash->parent.value());
+        }
     }
 
     const QString stmt = "INSERT OR REPLACE INTO stashes"
@@ -358,19 +315,19 @@ void UserStore::handleStash(QString realm,
     auto db = getThreadLocalDatabase();
     auto query = QSqlQuery(db);
     query.prepare(stmt);
-    query.bindValue(0, stash_id);
-    query.bindValue(1, stash.parent.value_or(""));
-    query.bindValue(2, stash.name);
-    query.bindValue(3, stash.type);
-    if (stash.index) {
-        query.bindValue(4, *stash.index);
+    query.bindValue(0, stash->id);
+    query.bindValue(1, stash->parent.value_or(""));
+    query.bindValue(2, stash->name);
+    query.bindValue(3, stash->type);
+    if (stash->index) {
+        query.bindValue(4, stash->index.value());
     } else {
         query.bindValue(4, "");
     }
     query.bindValue(5, realm);
     query.bindValue(6, league);
     query.bindValue(7, QDateTime::currentDateTime());
-    query.bindValue(8, *data);
+    query.bindValue(8, data);
 
     if (!query.exec()) {
         const QString message = query.lastError().text();

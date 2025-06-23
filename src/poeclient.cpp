@@ -3,8 +3,6 @@
 
 #include "poeclient.h"
 
-#include "poe.h"
-#include "util/json.h"
 #include "util/spdlog_qt.h"
 
 static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
@@ -40,28 +38,6 @@ namespace {
         return false;
     }
 
-    poe::LeagueListPtr unwrapLeagueList(const QByteArray &data)
-    {
-        auto x = json::parse_strict<poe::StashTab>(data);
-        /*
-        poe::LeagueListWrapper wrapper;
-        const std::string buffer(data.constData(), data.size());
-        auto ctx = glz::context();
-        auto pe = glz::read<glz::opts{}>(wrapper, buffer, ctx);
-        if (pe) {
-            std::string descriptive_error = glz::format_error(pe, buffer);
-        }
-        glz::read_json();
-        const auto [wrapper, ok] = json::from_json<poe::LeagueListWrapper>(data, json::PERMISSIVE);
-        if (!ok) {
-            spdlog::error("PoE: error unwrapping stash list.");
-            return nullptr;
-        };
-        return std::make_shared<poe::LeagueList>(wrapper.leagues);
-        */
-        return nullptr;
-    }
-
 } // namespace
 
 PoeClient::PoeClient(QObject *parent)
@@ -70,8 +46,6 @@ PoeClient::PoeClient(QObject *parent)
 // https://www.pathofexile.com/developer/docs/reference#leagues-list
 void PoeClient::listLeagues(const QString &realm)
 {
-    spdlog::debug("PoE: list account leagues: realm='{}'", realm);
-
     // Check the realm.
     constexpr const char *endpoint = LIST_ACCOUNT_LEAGUES;
     if (!checkRealm(realm, endpoint)) {
@@ -85,18 +59,20 @@ void PoeClient::listLeagues(const QString &realm)
     }
 
     // Send the request.
+    const QString tag = parts.mid(1).join("/");
     const QUrl url(parts.join("/"));
-    emit sendRequest(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
-        spdlog::trace("PoE: emitting leagueListRecieved.");
-        emit leagueListReceived(realm, getData(reply));
+    spdlog::info("PoE: requesting list: {}", tag);
+
+    emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
+        spdlog::info("PoE: received list: {}", tag);
+        const auto [parsed, raw] = PoeClient::unpack<LeagueListWrapper>(reply);
+        emit leagueListReceived(realm, parsed.leagues, raw);
     });
 }
 
 // https://www.pathofexile.com/developer/docs/reference#characters-list
 void PoeClient::listCharacters(const QString &realm)
 {
-    spdlog::debug("PoE: list characters: realm='{}'", realm);
-
     // Check the realm.
     constexpr const char *endpoint = LIST_CHARACTERS;
     if (!checkRealm(realm, endpoint)) {
@@ -110,18 +86,20 @@ void PoeClient::listCharacters(const QString &realm)
     }
 
     // Send the request.
+    const QString tag = parts.mid(1).join("/");
     const QUrl url(parts.join("/"));
-    emit sendRequest(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
-        spdlog::trace("PoE: emitting characterListReceived.");
-        emit characterListReceived(realm, getData(reply));
+    spdlog::info("PoE: requesting list: {}", tag);
+
+    emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
+        spdlog::trace("PoE: received list: {}", tag);
+        const auto [parsed, raw] = PoeClient::unpack<CharacterListWrapper>(reply);
+        emit characterListReceived(realm, parsed.characters, raw);
     });
 }
 
 // https://www.pathofexile.com/developer/docs/reference#stashes-list
 void PoeClient::listStashes(const QString &realm, const QString &league)
 {
-    spdlog::debug("PoE: list stashes: ream='{}', league='{}'", realm, league);
-
     // Check the realm.
     constexpr const char *endpoint = LIST_STASHES;
     if (!checkRealm(realm, endpoint)) {
@@ -140,18 +118,20 @@ void PoeClient::listStashes(const QString &realm, const QString &league)
     parts.append(league);
 
     // Send the request.
+    const QString tag = parts.mid(1).join("/");
     const QUrl url(parts.join("/"));
-    emit sendRequest(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
-        spdlog::trace("PoE: emitting stashListReceived.");
-        emit stashListReceived(realm, league, getData(reply));
+    spdlog::info("PoE: requesting list: {}", tag);
+
+    emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
+        spdlog::trace("PoE: received list: {}", tag);
+        const auto [parsed, raw] = PoeClient::unpack<StashListWrapper>(reply);
+        emit stashListReceived(realm, league, parsed.stashes, raw);
     });
 }
 
 // https://www.pathofexile.com/developer/docs/reference#characters-get
 void PoeClient::getCharacter(const QString &realm, const QString &name)
 {
-    spdlog::debug("PoE: get character: realm='{}', name='{}'", realm, name);
-
     // Check the realm.
     constexpr const char *endpoint = GET_CHARACTER;
     if (!checkRealm(realm, endpoint)) {
@@ -170,10 +150,16 @@ void PoeClient::getCharacter(const QString &realm, const QString &name)
     parts.append(name);
 
     // Send the request.
+    const QString tag = parts.mid(1).join("/");
     const QUrl url(parts.join("/"));
-    emit sendRequest(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
-        spdlog::trace("PoE: emitting characterReceived.");
-        emit characterReceived(realm, name, getData(reply));
+    spdlog::info("PoE: requesting {} with {} pending.", tag, m_pendingCharacterRequests);
+
+    ++m_pendingCharacterRequests;
+    emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
+        --m_pendingCharacterRequests;
+        const auto [parsed, raw] = PoeClient::unpack<CharacterWrapper>(reply);
+        spdlog::info("PoE: received {} with {} pending.", tag, m_pendingCharacterRequests);
+        emit characterReceived(realm, name, parsed.character, raw);
     });
 }
 
@@ -183,12 +169,6 @@ void PoeClient::getStash(const QString &realm,
                          const QString &stash_id,
                          const QString &substash_id)
 {
-    spdlog::debug("PoE: get stash: realm='{}', league='{}', stash_id='{}', substash_id='{}'",
-                  realm,
-                  league,
-                  stash_id,
-                  substash_id);
-
     // Check the realm.
     constexpr const char *endpoint = GET_STASH;
     if (!checkRealm(realm, endpoint)) {
@@ -215,10 +195,17 @@ void PoeClient::getStash(const QString &realm,
     }
 
     // Send the request.
+    const QString tag = parts.mid(1).join("/");
     const QUrl url(parts.join("/"));
-    emit sendRequest(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
-        spdlog::trace("PoE: emitting stashReceived.");
-        emit stashReceived(realm, league, stash_id, substash_id, getData(reply));
+    spdlog::info("PoE: requesting {} with {} pending", tag, m_pendingStashRequests);
+
+    ++m_pendingStashRequests;
+    emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
+        --m_pendingStashRequests;
+        const auto [parsed, raw] = PoeClient::unpack<StashTabWrapper>(reply);
+        const QString name = parsed.stash ? parsed.stash->name : "";
+        spdlog::info("PoE: received {} '{}' with {} pending.", tag, name, m_pendingStashRequests);
+        emit stashReceived(realm, league, stash_id, substash_id, parsed.stash, raw);
     });
 }
 
@@ -231,14 +218,4 @@ bool PoeClient::checkRealm(const QString &realm, const char *endpoint)
         spdlog::error("PoE: invalid realm for {}: {}", endpoint, realm);
     }
     return ok;
-}
-
-std::shared_ptr<QByteArray> PoeClient::getData(QNetworkReply *reply)
-{
-    if (!reply) {
-        spdlog::error("PoE: reply was null.");
-        return nullptr;
-    }
-    reply->deleteLater();
-    return std::make_shared<QByteArray>(reply->readAll());
 }

@@ -342,34 +342,19 @@ namespace poe {
         std::optional<std::vector<poe::Item>> items;
     };
 
-    // Typedefs.
-
-    using LeagueList = std::vector<League>;
-    using LeagueListPtr = std::shared_ptr<const LeagueList>;
-
-    using CharacterList = std::vector<Character>;
-    using CharacterListPtr = std::shared_ptr<const CharacterList>;
-    using CharacterPtr = std::shared_ptr<const Character>;
-
-    using StashList = std::vector<StashTab>;
-    using StashListPtr = std::shared_ptr<const StashList>;
-    using StashTabPtr = std::shared_ptr<const StashTab>;
-
-    // API wrappers.
-
     struct LeagueListWrapper
     {
-        LeagueList leagues;
+        std::vector<League> leagues;
     };
 
     struct CharacterListWrapper
     {
-        CharacterList characters;
+        std::vector<Character> characters;
     };
 
     struct StashListWrapper
     {
-        StashList stashes;
+        std::vector<StashTab> stashes;
     };
 
     struct CharacterWrapper
@@ -379,25 +364,21 @@ namespace poe {
 
     struct StashTabWrapper
     {
-        std::optional<poe::StashTab> stash;
+        std::optional<StashTab> stash;
     };
 
 } // namespace poe
 
 // ----- Formatters for spdlog ------------------------------------------------------
 
-namespace fmt {
+template<>
+struct fmt::formatter<poe::DisplayMode, char> : QtEnumFormatter<poe::DisplayMode>
+{};
 
-    template<>
-    struct formatter<poe::DisplayMode, char> : QtEnumFormatter<poe::DisplayMode>
-    {};
+template<>
+struct fmt::formatter<poe::FrameType, char> : QtEnumFormatter<poe::FrameType>
+{};
 
-    template<>
-    struct formatter<poe::FrameType, char> : QtEnumFormatter<poe::FrameType>
-    {};
-
-    template<>
-    struct formatter<poe::ItemPropertyType, char> : QtEnumFormatter<poe::ItemPropertyType>
-    {};
-
-} // namespace fmt
+template<>
+struct fmt::formatter<poe::ItemPropertyType, char> : QtEnumFormatter<poe::ItemPropertyType>
+{};

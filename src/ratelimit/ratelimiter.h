@@ -83,9 +83,6 @@ private:
                              RateLimitedReply *reply,
                              QNetworkReply *network_reply);
 
-    // Log extra details about the HEAD request and replies
-    void LogSetupReply(const QNetworkRequest &request, const QNetworkReply *reply);
-
     // Get or create the rate limit policy manager for the given endpoint.
     RateLimitManager &GetManager(const QString &endpoint, const QString &policy_name);
 

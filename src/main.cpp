@@ -13,7 +13,6 @@ static_assert(ACQUISITION_USE_SPDLOG);
 #include <QDir>
 #include <QString>
 #include <QUrl>
-// hello;
 
 #ifdef QT_DEBUG
 constexpr auto DEFAULT_LOG_LEVEL = spdlog::level::debug;

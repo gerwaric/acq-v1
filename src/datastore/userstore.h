@@ -6,7 +6,11 @@
 #include "datastore.h"
 #include "poe.h"
 
+#include <QByteArray>
 #include <QObject>
+#include <QString>
+
+#include <vector>
 
 class UserStore : public DataStore
 {
@@ -21,22 +25,37 @@ public:
     void loadStashes(const QString &realm, const QString &league);
 
 signals:
-    void leagueListReceived(poe::LeagueListPtr leagues);
-    void characterListReceived(poe::CharacterListPtr characters);
-    void characterReceived(poe::CharacterPtr);
-    void stashListReceived(poe::StashListPtr);
-    void stashReceived(poe::StashTabPtr);
+    void leagueListReceived(std::vector<poe::League> leagueList);
+    void characterListReceived(std::vector<poe::Character> characterList);
+    void characterReceived(poe::Character character);
+    void stashListReceived(std::vector<poe::StashTab> stashList);
+    void stashReceived(poe::StashTab stash);
 
 public slots:
-    void handleLeagueList(QString realm, std::shared_ptr<QByteArray> data);
-    void handleCharacterList(QString realm, std::shared_ptr<QByteArray> data);
-    void handleStashList(QString realm, QString league, std::shared_ptr<QByteArray> data);
-    void handleCharacter(QString realm, QString name, std::shared_ptr<QByteArray> data);
-    void handleStash(QString realm,
-                     QString league,
-                     QString stash_id,
-                     QString substash_id,
-                     std::shared_ptr<QByteArray> data);
+    void saveLeagueList(const QString &realm,
+                        const std::vector<poe::League> &leagues,
+                        const QByteArray &data);
+
+    void saveCharacterList(const QString &realm,
+                           const std::vector<poe::Character> &characters,
+                           const QByteArray &data);
+
+    void saveStashList(const QString &realm,
+                       const QString &league,
+                       const std::vector<poe::StashTab> &stashes,
+                       const QByteArray &data);
+
+    void saveCharacter(const QString &realm,
+                       const QString &name,
+                       const std::optional<poe::Character> &character,
+                       const QByteArray &data);
+
+    void saveStash(const QString &realm,
+                   const QString &league,
+                   const QString &stash_id,
+                   const QString &substash_id,
+                   const std::optional<poe::StashTab> &stash,
+                   const QByteArray &data);
 
 private:
     void updateIndex(const QString &name,

@@ -16,6 +16,7 @@ Frame {
         // Logging row
         Label { text: "Logging Level:" }
         ComboBox {
+            id: currentLogLevel
             model: ["off","trace","debug","info","warn","error","critical"]
             onCurrentTextChanged: App.debugLevel = currentText
         }
@@ -23,6 +24,7 @@ Frame {
         // Realm Row
         Label { text: "Realm:"}
         ComboBox {
+            id: currentRealm
             model: ["pc","poe2","xbox","sony"]
             onCurrentTextChanged: App.realm = currentText
         }
@@ -38,9 +40,10 @@ Frame {
         Button {
             text: "List leagues"
             enabled: App.isAuthenticated
-            onClicked: App.listLeagues()
+            onClicked: App.poeClient.listLeagues(currentRealm.currentText)
         }
         ComboBox {
+            id: currentLeague
             model: App.leagues
             enabled: App.isAuthenticated
             onCurrentTextChanged: {
@@ -52,9 +55,10 @@ Frame {
         Button {
             text: "List Characters"
             enabled: App.isAuthenticated
-            onClicked: App.listCharacters()
+            onClicked: App.poeClient.listCharacters(currentRealm.currentText)
         }
         ComboBox {
+            id: currentCharacter
             model: App.characters
             enabled: App.isAuthenticated
             onCurrentTextChanged: {
@@ -67,7 +71,7 @@ Frame {
         Button {
             text: "List Stashes"
             enabled: App.isAuthenticated
-            onClicked: App.listStashes()
+            onClicked: App.poeClient.listStashes(currentRealm.currentText, currentLeague.currentText)
         }
         ComboBox {
             model: App.stashes

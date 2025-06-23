@@ -107,6 +107,8 @@ void RateLimitManager::ReceiveReply()
     if (!reply->hasRawHeader("X-Rate-Limit-Policy")) {
         spdlog::error("The rate limit manager received a reply for {} without rate limit headers.",
                       m_policy->name());
+        NetworkManager::logRequest(m_active_request->network_request);
+        NetworkManager::logReply(reply);
         return;
     }
 
@@ -206,6 +208,8 @@ void RateLimitManager::ReceiveReply()
                           m_active_request->id,
                           event.reply_status,
                           reply->error());
+            NetworkManager::logRequest(m_active_request->network_request);
+            NetworkManager::logReply(reply);
         }
 
         m_active_request->reply = nullptr;
