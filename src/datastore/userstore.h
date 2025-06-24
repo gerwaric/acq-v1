@@ -18,6 +18,8 @@ class UserStore : public DataStore
 public:
     explicit UserStore(const QString &username, QObject *parent = nullptr);
 
+    QSqlDatabase getDatabase() { return getThreadLocalDatabase(); };
+
     void loadLeagueList(const QString &realm);
     void loadCharacterList(const QString &realm);
     void loadCharacters(const QString &realm, const QString &league);

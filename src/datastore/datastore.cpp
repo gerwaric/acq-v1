@@ -41,18 +41,32 @@ QString DataStore::getThreadLocalConnectionName() const
 QSqlDatabase DataStore::getThreadLocalDatabase()
 {
     QString connection = getThreadLocalConnectionName();
+
+    // Create a new database connection if needed.
     if (!QSqlDatabase::contains(connection)) {
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", connection);
         db.setDatabaseName(m_filename);
+
+        // Open the databse.
         if (!db.open()) {
             const QString message = db.lastError().text();
-            spdlog::error("Failed to open database {}: {}", m_filename, message);
-        } else {
-            // Add the connection to the list so we can close it later.
-            QMutexLocker locker(&m_mutex);
-            m_connections.insert(connection);
+            spdlog::error("DataStore: failed to open database {}: {}", m_filename, message);
+            return QSqlDatabase();
+        };
+
+        // Enable foreign keys.
+        QSqlQuery query(db);
+        if (!query.exec("PRAGMA foreign_keys = ON")) {
+            const QString message = query.lastError().text();
+            spdlog::warn("DataStore: failed to enable foreign keys on {}: {}", m_filename, message);
         }
+
+        // Save this connection for later.
+        QMutexLocker locker(&m_mutex);
+        m_connections.insert(connection);
     }
+
+    // Return this connection.
     return QSqlDatabase::database(connection);
 }
 
@@ -60,8 +74,6 @@ void DataStore::createTable(const QString &table, const QStringList &columns)
 {
     const QString cols = columns.join(", ");
     const QString stmt = QString("CREATE TABLE IF NOT EXISTS %1 (%2)").arg(table, cols);
-
-    spdlog::trace("DataStore: creating {} with ({})", table, cols);
 
     auto db = getThreadLocalDatabase();
     auto query = QSqlQuery(db);
@@ -79,25 +91,15 @@ void DataStore::createIndexes(const QString &table, const QStringList &columns)
     auto query = QSqlQuery(db);
 
     for (const auto &column : columns) {
-        const QString idx = QString("idx_%1_%2").arg(table, column);
-
-        query.prepare("SELECT name FROM sqlite_master WHERE type='index' AND name = ?");
-        query.bindValue(0, idx);
+        const QString index = QString("idx_%1_%2").arg(table, column);
+        query.prepare(QString("CREATE INDEX IF NOT EXISTS %1 ON %2(%3)").arg(index, table, column));
         if (!query.exec()) {
             const QString message = query.lastError().text();
-            spdlog::error("DataStore: error checking index '{}': {}", idx, message);
-            continue;
-        }
-
-        if (query.next()) {
-            spdlog::debug("DataStore: index already exists: {}", idx);
-            continue;
-        }
-
-        query.prepare(QString("CREATE INDEX %1 ON %2(%3)").arg(idx, table, column));
-        if (!query.exec()) {
-            const QString message = query.lastError().text();
-            spdlog::error("DataStore: failed to create '{}': {}", idx, message);
+            spdlog::error("DataStore: failed to create '{}' on {}({}): {}",
+                          index,
+                          table,
+                          column,
+                          message);
             continue;
         }
     }

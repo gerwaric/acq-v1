@@ -6,6 +6,8 @@
 #include "util/json.h"
 #include "util/spdlog_qt.h"
 
+#include <QSqlDatabase>
+
 static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
 
 App::App(QObject *parent)
@@ -13,6 +15,8 @@ App::App(QObject *parent)
     , m_oauthManager(m_networkManager)
     , m_rateLimiter(m_networkManager)
 {
+    //m_characterModel = new QSqlQueryModel(this);
+
     connect(&m_oauthManager, &OAuthManager::grantAccess, this, &App::accessGranted);
     connect(&m_poeClient, &PoeClient::requestReady, &m_rateLimiter, &RateLimiter::makeRequest);
     connect(&m_rateLimiter, &RateLimiter::Paused, this, &App::rateLimited);
@@ -21,8 +25,6 @@ App::App(QObject *parent)
     if (ok) {
         m_oauthManager.setToken(token);
     }
-
-    spdlog::info("App: creating items store");
 }
 
 void App::authenticate()
@@ -169,6 +171,10 @@ void App::accessGranted(const OAuthToken &token)
     m_userStore->loadStashes(m_realm, m_league);
 
     emit authenticationStateChanged();
+
+    QSqlDatabase db = m_userStore->getDatabase();
+    m_characterModel.setQuery("SELECT name, realm, league, timestamp FROM characters", db);
+    m_stashModel.setQuery("SELECT name, type, league, id, parent from stashes", db);
 }
 
 void App::rateLimited(int seconds, const QString &policy_name)
@@ -201,7 +207,7 @@ void App::handleCharacter(const QString &realm,
                           const QByteArray &data)
 {
     if (character) {
-        m_model.appendCharacter(character.value());
+        m_itemModel.appendCharacter(character.value());
     } else {
         spdlog::error("App: character is empty: realm({}) name({})", realm, name);
     }
@@ -215,7 +221,7 @@ void App::handleStash(const QString &realm,
                       const QByteArray &data)
 {
     if (stash) {
-        m_model.appendStash(stash.value());
+        m_itemModel.appendStash(stash.value());
     } else {
         spdlog::error("App: stash is empty: realm({}) league({}) stash_id({}) substash_id({})",
                       realm,

@@ -18,7 +18,6 @@ public:
     ~DataStore();
 
 protected:
-    QString getThreadLocalConnectionName() const;
     QSqlDatabase getThreadLocalDatabase();
 
     void createTable(const QString &table, const QStringList &columns);
@@ -27,6 +26,8 @@ protected:
     const QString m_filename;
 
 private:
+    QString getThreadLocalConnectionName() const;
+
     mutable QMutex m_mutex;
     mutable QSet<QString> m_connections;
 };

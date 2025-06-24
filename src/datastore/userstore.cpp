@@ -16,23 +16,24 @@ static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Q
 UserStore::UserStore(const QString &username, QObject *parent)
     : DataStore(getPath(username), parent)
 {
+    // List of available chararacters and stashes are stored here.
     createTable("indexes",
                 {"name TEXT PRIMARY KEY",
                  "realm TEXT",
                  "league TEXT",
-                 "timestamp TEXT",
+                 "timestamp INTEGER",
                  "data TEXT"});
 
+    // Full character data with items is stored here.
     createTable("characters",
                 {"id TEXT PRIMARY KEY",
                  "name TEXT",
                  "realm TEXT",
                  "league TEXT",
-                 "timestamp TEXT",
+                 "timestamp INTEGER",
                  "data BLOB"});
 
-    createIndexes("characters", {"realm", "league"});
-
+    // Full stash data with items is stored here.
     createTable("stashes",
                 {"id TEXT PRIMARY KEY",
                  "parent TEXT REFERENCES stashes(id)",
@@ -41,10 +42,20 @@ UserStore::UserStore(const QString &username, QObject *parent)
                  "stash_index INTEGER",
                  "realm TEXT",
                  "league TEXT",
-                 "timestamp TEXT",
+                 "timestamp INTEGER",
                  "data BLOB"});
 
-    createIndexes("stashes", {"parent", "type", "realm", "league"});
+    createTable("buyouts",
+                {"item_id TEXT",
+                 "stash_id TEXT REFERENCES stashes(id)",
+                 "note TEXT",
+                 "source TEXT",
+                 "timestamp INTEGER"});
+
+    // Add indexes for the most common use cases.
+    createIndexes("characters", {"realm", "league"});
+    createIndexes("stashes", {"realm", "league", "parent", "type"});
+    createIndexes("buyouts", {"item_id", "stash_id"});
 }
 
 void UserStore::loadLeagueList(const QString &realm)
@@ -269,7 +280,7 @@ void UserStore::saveCharacter(const QString &realm,
     query.bindValue(1, name);
     query.bindValue(2, realm);
     query.bindValue(3, character->league.value_or(""));
-    query.bindValue(4, QDateTime::currentDateTime());
+    query.bindValue(4, QDateTime::currentMSecsSinceEpoch());
     query.bindValue(5, data);
 
     if (!query.exec()) {
@@ -326,7 +337,7 @@ void UserStore::saveStash(const QString &realm,
     }
     query.bindValue(5, realm);
     query.bindValue(6, league);
-    query.bindValue(7, QDateTime::currentDateTime());
+    query.bindValue(7, QDateTime::currentMSecsSinceEpoch());
     query.bindValue(8, data);
 
     if (!query.exec()) {
@@ -363,7 +374,7 @@ void UserStore::updateIndex(const QString &name,
     query.bindValue(0, name);
     query.bindValue(1, realm);
     query.bindValue(2, league);
-    query.bindValue(3, QDateTime::currentDateTime());
+    query.bindValue(3, QDateTime::currentMSecsSinceEpoch());
     query.bindValue(4, data);
 
     if (!query.exec()) {

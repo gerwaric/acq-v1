@@ -16,6 +16,8 @@
 
 #include <QAbstractItemModel>
 #include <QObject>
+#include <QSqlQueryModel>
+#include <QSqlTableModel>
 #include <QString>
 #include <QStringList>
 
@@ -44,7 +46,10 @@ class App : public QObject
     Q_PROPERTY(QStringList stashes READ getStashNames NOTIFY stashesUpdated)
 
     Q_PROPERTY(PoeClient *poeClient READ getPoeClient CONSTANT)
-    Q_PROPERTY(QAbstractItemModel *itemsModel READ getItemsModel CONSTANT)
+
+    Q_PROPERTY(QSqlQueryModel *characterModel READ getCharacterModel CONSTANT)
+    Q_PROPERTY(QAbstractItemModel *stashModel READ getStashModel CONSTANT)
+    Q_PROPERTY(QAbstractItemModel *itemsModel READ getItemModel CONSTANT)
 
 public:
     App(QObject *parent = nullptr);
@@ -74,11 +79,14 @@ public:
     QStringList getCharacterNames() const;
     QStringList getStashNames() const;
 
-    QAbstractItemModel *getItemsModel() { return &m_model; }
+    QSqlQueryModel *getCharacterModel() { return &m_characterModel; }
+    QSqlQueryModel *getStashModel() { return &m_stashModel; }
+    QAbstractItemModel *getItemModel() { return &m_itemModel; }
 
 signals:
     void debugLevelChanged();
     void authenticationStateChanged();
+
     void leaguesUpdated();
     void charactersUpdated();
     void stashesUpdated();
@@ -135,5 +143,7 @@ private:
     std::vector<poe::Character> m_characterList;
     std::vector<poe::StashTab> m_stashList;
 
-    TreeModel m_model;
+    QSqlQueryModel m_characterModel;
+    QSqlQueryModel m_stashModel;
+    TreeModel m_itemModel;
 };

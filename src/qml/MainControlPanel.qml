@@ -7,7 +7,7 @@ import QtQuick.Layouts
 
 import Acquisition
 
-Frame {
+Item {
 
     GridLayout {
         anchors.fill: parent
