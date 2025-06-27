@@ -5,7 +5,6 @@
 
 #include "model/stashinfo.h"
 #include "model/treenode.h"
-#include "poe.h"
 
 class StashNode : public TreeNode
 {

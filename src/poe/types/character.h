@@ -5,9 +5,9 @@
 
 #include <QString>
 
-#include <poe/item.h>
-#include <poe/itemjeweldata.h>
-#include <poe/passivenode.h>
+#include <poe/types/item.h>
+#include <poe/types/itemjeweldata.h>
+#include <poe/types/passivenode.h>
 
 #include <glaze/glaze.hpp>
 

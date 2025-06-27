@@ -4,6 +4,7 @@
 #include "app.h"
 
 #include "util/json.h"
+#include "util/qt.h"
 #include "util/spdlog_qt.h"
 
 #include <QSqlDatabase>
@@ -15,32 +16,120 @@ App::App(QObject *parent)
     , m_oauthManager(m_networkManager)
     , m_rateLimiter(m_networkManager)
 {
-    //m_characterModel = new QSqlQueryModel(this);
-
     connect(&m_oauthManager, &OAuthManager::grantAccess, this, &App::accessGranted);
-    connect(&m_poeClient, &PoeClient::requestReady, &m_rateLimiter, &RateLimiter::makeRequest);
     connect(&m_rateLimiter, &RateLimiter::Paused, this, &App::rateLimited);
+    connect(&m_client, &PoeClient::requestReady, &m_rateLimiter, &RateLimiter::makeRequest);
 
+    // Look for an existing username.
+    const QString username = m_globalStore.get("last_username").toString();
+    if (!username.isEmpty()) {
+        spdlog::info("App: username is '{}'", username);
+        m_username = username;
+        m_repo = std::make_unique<PoeRepo>(username, this);
+    }
+
+    // Look for an existing OAuth token.
     const auto [token, ok] = m_globalStore.retrieve<OAuthToken>("oauth_token");
     if (ok) {
+        spdlog::debug("App: found an existing token {}", token.refresh_token);
         m_oauthManager.setToken(token);
     }
 }
+
+QString App::getLogLevel() const
+{
+    const auto level = spdlog::get_level();
+    const auto name = spdlog::level::to_string_view(level);
+    return QString::fromUtf8(name);
+}
+
+void App::setLogLevel(const QString &level)
+{
+    const auto str = level.toUtf8().toStdString();
+    const auto lvl = spdlog::level::from_str(str);
+    spdlog::set_level(lvl);
+    spdlog::info("App: logging level set to {}", spdlog::get_level());
+};
 
 void App::authenticate()
 {
     m_oauthManager.initLogin();
 }
 
+QStringList App::getRealmNames() const
+{
+    return util::toStringList<PoeClient::Realm>();
+}
+
+QStringList App::getLeagueNames(const QString &realm) const
+{
+    if (!m_repo) {
+        spdlog::error("App: cannot get league names: repo is uninitialized.");
+        return {};
+    }
+
+    // Get the league list.
+    const auto leagues = m_repo->getLeagueList(realm);
+
+    // Build a list of names.
+    QStringList names;
+    names.reserve(leagues.size());
+    for (const auto &league : leagues) {
+        names.append(league.name);
+    }
+    return names;
+}
+
+void App::loadItems(const QString &realm, const QString &league)
+{
+    if (!m_repo) {
+        spdlog::error("App: cannot load items: repo is uninitialized.");
+        return;
+    }
+}
+
+QStringList App::getCharacterNames() const
+{
+    spdlog::debug("App: getting character names");
+    QStringList names;
+    names.reserve(m_characterList.size());
+    for (const auto &character : m_characterList) {
+        names.append(character.name);
+    }
+    return names;
+}
+
+QStringList App::getStashNames() const
+{
+    QStringList names;
+    names.reserve(m_stashList.size());
+    for (const auto &stash : m_stashList) {
+        names.append(stash.name);
+        if (stash.children) {
+            for (const auto &child : stash.children.value()) {
+                names.append(">> " + child.name);
+                if (child.children) {
+                    spdlog::error("App: stash child has children");
+                }
+            }
+        }
+    }
+    return names;
+}
+
 void App::getCharacter()
 {
-    m_poeClient.getCharacter(m_realm, m_character);
+    if (m_repo) {
+        m_repo->updateCharacter(m_realm, m_character);
+    }
 }
 
 void App::getAllCharacters()
 {
-    for (const auto &character : m_characterList) {
-        m_poeClient.getCharacter(m_realm, character.name);
+    if (m_repo) {
+        for (const auto &character : m_characterList) {
+            m_repo->updateCharacter(m_realm, character.name);
+        }
     }
 }
 
@@ -48,9 +137,15 @@ void App::getAllStashes()
 {
     // TODO: Special cases for map tabs and unique tab.
 
+    if (!m_repo) {
+        spdlog::warn("App: cannot get stashes: repo is uninitialized.");
+        return;
+    }
+    PoeRepo &repo = *m_repo;
+
     for (const auto &stash : m_stashList) {
         spdlog::info("App: requesting stash '{}' ({})", stash.name, stash.id);
-        m_poeClient.getStash(m_realm, m_league, stash.id, "");
+        repo.updateStash(m_realm, m_league, stash.id, "");
         if (stash.children) {
             for (const auto &child : stash.children.value()) {
                 spdlog::info("App: requesting stash '{}' ({}): child of '{}' (){})",
@@ -76,9 +171,9 @@ void App::getAllStashes()
 
                 // We only use substash id for children with a parent.
                 if (child.parent) {
-                    m_poeClient.getStash(m_realm, m_league, stash.id, child.id);
+                    repo.updateStash(m_realm, m_league, stash.id, child.id);
                 } else {
-                    m_poeClient.getStash(m_realm, m_league, child.id, "");
+                    repo.updateStash(m_realm, m_league, child.id, "");
                 }
 
                 // We don't support grandchildren right now.
@@ -94,87 +189,19 @@ void App::getAllStashes()
     }
 }
 
-QStringList App::getLeagueNames() const
-{
-    spdlog::trace("App: getting league names");
-    QStringList names;
-    names.reserve(m_leagueList.size());
-    for (const auto &league : m_leagueList) {
-        names.append(league.name);
-    }
-    return names;
-}
-
-QStringList App::getCharacterNames() const
-{
-    spdlog::debug("App: getting character names");
-    QStringList names;
-    names.reserve(m_characterList.size());
-    for (const auto &character : m_characterList) {
-        names.append(character.name);
-    }
-    return names;
-}
-
-QStringList App::getStashNames() const
-{
-    QStringList names;
-    names.reserve(m_stashList.size());
-    for (const auto &stash : m_stashList) {
-        names.append(stash.name);
-        if (stash.children) {
-            for (const auto &child : stash.children.value()) {
-                names.append(stash.name + " / " + child.name);
-                if (child.children) {
-                    spdlog::error("App: stash child has children");
-                }
-            }
-        }
-    }
-    return names;
-}
-
 void App::accessGranted(const OAuthToken &token)
 {
-    // First store the token.
-    const QString json_token = json::toString(token);
-    m_globalStore.set("oauth_token", json_token);
+    // Store the token and username
+    m_globalStore.set("oauth_token", json::toString(token));
+    m_globalStore.set("last_username", token.username);
 
-    // Then update ourselves.
+    // Update ourselves.
     m_networkManager.setBearerToken(token.access_token);
     m_authenticated = true;
     m_username = token.username;
-
-    if (m_userStore) {
-        delete m_userStore;
-    }
-    m_userStore = new UserStore(m_username, this);
-
-    connect(&m_poeClient, &PoeClient::leagueListReceived, m_userStore, &UserStore::saveLeagueList);
-    connect(&m_poeClient,
-            &PoeClient::characterListReceived,
-            m_userStore,
-            &UserStore::saveCharacterList);
-    connect(&m_poeClient, &PoeClient::stashListReceived, m_userStore, &UserStore::saveStashList);
-    connect(&m_poeClient, &PoeClient::characterReceived, m_userStore, &UserStore::saveCharacter);
-    connect(&m_poeClient, &PoeClient::stashReceived, m_userStore, &UserStore::saveStash);
-
-    connect(&m_poeClient, &PoeClient::leagueListReceived, this, &App::handleLeagueList);
-    connect(&m_poeClient, &PoeClient::characterListReceived, this, &App::handleCharacterList);
-    connect(&m_poeClient, &PoeClient::characterReceived, this, &App::handleCharacter);
-    connect(&m_poeClient, &PoeClient::stashListReceived, this, &App::handleStashList);
-    connect(&m_poeClient, &PoeClient::stashReceived, this, &App::handleStash);
-
-    m_userStore->loadCharacterList(m_realm);
-    m_userStore->loadLeagueList(m_realm);
-    m_userStore->loadStashList(m_realm, m_league);
-    m_userStore->loadStashes(m_realm, m_league);
+    m_repo = std::make_unique<PoeRepo>(m_username, this);
 
     emit authenticationStateChanged();
-
-    QSqlDatabase db = m_userStore->getDatabase();
-    m_characterModel.setQuery("SELECT name, realm, league, timestamp FROM characters", db);
-    m_stashModel.setQuery("SELECT name, type, league, id, parent from stashes", db);
 }
 
 void App::rateLimited(int seconds, const QString &policy_name)
@@ -207,7 +234,7 @@ void App::handleCharacter(const QString &realm,
                           const QByteArray &data)
 {
     if (character) {
-        m_itemModel.appendCharacter(character.value());
+        m_itemModel.loadCharacter(character.value());
     } else {
         spdlog::error("App: character is empty: realm({}) name({})", realm, name);
     }
@@ -221,7 +248,7 @@ void App::handleStash(const QString &realm,
                       const QByteArray &data)
 {
     if (stash) {
-        m_itemModel.appendStash(stash.value());
+        m_itemModel.loadStash(stash.value());
     } else {
         spdlog::error("App: stash is empty: realm({}) league({}) stash_id({}) substash_id({})",
                       realm,
@@ -243,10 +270,10 @@ void App::handleStashList(const QString &realm,
 
 void App::loadSelectedCharacters()
 {
-    m_userStore->loadCharacters(m_realm, m_league);
+    //m_userStore->loadCharacters(m_realm, m_league);
 }
 
 void App::loadSelectedStashes()
 {
-    m_userStore->loadStashes(m_realm, m_league);
+    //m_userStore->loadStashes(m_realm, m_league);
 }

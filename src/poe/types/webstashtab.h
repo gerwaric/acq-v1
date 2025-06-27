@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <poe/item.h>
+#include <types/item.h>
 
 #include <optional>
 #include <vector>

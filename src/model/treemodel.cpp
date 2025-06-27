@@ -49,7 +49,7 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
     return QVariant();
 }
 
-void TreeModel::appendCharacter(const poe::Character& character)
+void TreeModel::loadCharacter(const poe::Character &character)
 {
     const int k = m_characters.childCount();
     const QModelIndex parent_index = createIndex(0, 0, &m_characters);
@@ -58,7 +58,7 @@ void TreeModel::appendCharacter(const poe::Character& character)
     endInsertRows();
 }
 
-void TreeModel::appendStash(const poe::StashTab& stash)
+void TreeModel::loadStash(const poe::StashTab &stash)
 {
     const int k = m_stashes.childCount();
     const QModelIndex parent_index = createIndex(0, 0, &m_stashes);

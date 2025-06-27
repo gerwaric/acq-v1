@@ -88,8 +88,8 @@ void ItemInfo::loadProperties(const poe::Item &item, ItemInfo &i)
     float avg_chaos_hit = 0;
 
     for (const auto &property : item.properties.value()) {
+        // This function only parses the typed properties.
         if (!property.type) {
-            spdlog::trace("Item property does not have type: {}", property.name);
             continue;
         }
 
@@ -153,7 +153,8 @@ void ItemInfo::loadProperties(const poe::Item &item, ItemInfo &i)
         case poe::ItemPropertyType::ValdoElderReward:    
         case poe::ItemPropertyType::ValdoConquerorReward:
         case poe::ItemPropertyType::ValdoUniqueReward:    
-        case poe::ItemPropertyType::ValdoScarabReward: 
+        case poe::ItemPropertyType::ValdoScarabReward:
+        case poe::ItemPropertyType::RitualVesselSource:
             ok = true;
             break;
         }
@@ -176,8 +177,8 @@ void ItemInfo::loadRequirements(const poe::Item &item, ItemInfo &i)
     }
 
     for (const auto &requirement : item.requirements.value()) {
+        // We only handle requirements with a type.
         if (!requirement.type) {
-            spdlog::trace("Item requirement does not have type: {}", requirement.name);
             continue;
         }
 

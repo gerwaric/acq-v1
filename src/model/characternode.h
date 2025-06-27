@@ -3,9 +3,9 @@
 
 #pragma once
 
-#include "poe.h"
 #include "model/characterinfo.h"
 #include "model/treenode.h"
+#include <poe/types/item.h>
 
 class CharacterNode : public TreeNode
 {

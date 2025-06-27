@@ -3,10 +3,14 @@
 
 #pragma once
 
+#include <poe/types/enums.h>
+
 namespace poe {
 
     // https://www.pathofexile.com/developer/docs/reference#type-FrameType
 
+    using FrameType = poe_enums::FrameType;
+    /*
     enum class FrameType : unsigned {
         Normal = 0,
         Magic = 1,
@@ -21,5 +25,6 @@ namespace poe {
         SupporterFoil = 10,
         Necropolis = 11
     };
+    */
 
 } // namespace poe

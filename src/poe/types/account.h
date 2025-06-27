@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <poe/guild.h>
+#include <poe/types/guild.h>
 
 #include <QString>
 

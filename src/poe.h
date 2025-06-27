@@ -3,6 +3,10 @@
 
 #pragma once
 
+#error DO_NOT_INCLUDE
+
+/*
+
 #include "util/spdlog_qt.h"
 
 #include <optional>
@@ -77,6 +81,7 @@ namespace poe {
         RequiredDeceptionLevel = 45,
         RequiredEngineeringLevel = 46,
         HeistTarget = 47,
+        RitualVesselSource = 48,
         UltimatumSacrifice = 51,
         UltimatumReward = 52,
         Ward = 54,
@@ -118,7 +123,7 @@ namespace poe {
     {
         QString name;                                 // string
         std::vector<std::tuple<QString, int>> values; // array of array
-        //std::optional<poe::DisplayMode> displayMode;  // ? uint as DisplayMode
+        std::optional<poe::DisplayMode> displayMode;  // ? uint as DisplayMode
         //std::optional<double> progress;               // ? double rounded to 2 decimal places
         std::optional<poe::ItemPropertyType> type; // ? uint
         //std::optional<QString> suffix;                // ? string
@@ -382,3 +387,5 @@ struct fmt::formatter<poe::FrameType, char> : QtEnumFormatter<poe::FrameType>
 template<>
 struct fmt::formatter<poe::ItemPropertyType, char> : QtEnumFormatter<poe::ItemPropertyType>
 {};
+
+*/

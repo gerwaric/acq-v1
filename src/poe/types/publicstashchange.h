@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <poe/item.h>
+#include <poe/types/item.h>
 
 #include <glaze/glaze.hpp>
 

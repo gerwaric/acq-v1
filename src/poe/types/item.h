@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include <poe/cruciblenode.h>
-#include <poe/frametype.h>
-#include <poe/itemproperty.h>
-#include <poe/itemsocket.h>
+#include <poe/types/cruciblenode.h>
+#include <poe/types/frametype.h>
+#include <poe/types/itemproperty.h>
+#include <poe/types/itemsocket.h>
 
 #include <QString>
 
@@ -15,6 +15,8 @@
 #include <vector>
 
 namespace poe {
+
+    using ItemPropertyType = poe_enums::ItemPropertyType;
 
     // https://www.pathofexile.com/developer/docs/reference#type-Item
 

@@ -40,7 +40,6 @@ private:
     QOAuthHttpServerReplyHandler m_handler;
 
     void initOAuth();
-    void initHandler();
 
     bool m_authenticated{false};
     OAuthToken m_token;

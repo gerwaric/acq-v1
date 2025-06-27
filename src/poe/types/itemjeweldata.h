@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include <poe/passivegroup.h>
-#include <poe/passivenode.h>
+#include <poe/types/passivegroup.h>
+#include <poe/types/passivenode.h>
 
 #include <QString>
 

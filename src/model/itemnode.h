@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "poe.h"
 #include "model/iteminfo.h"
 #include "model/treenode.h"
 

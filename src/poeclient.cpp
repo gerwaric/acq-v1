@@ -65,8 +65,8 @@ void PoeClient::listLeagues(const QString &realm)
 
     emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
         spdlog::info("PoE: received list: {}", tag);
-        const auto [parsed, raw] = PoeClient::unpack<LeagueListWrapper>(reply);
-        emit leagueListReceived(realm, parsed.leagues, raw);
+        emit leagueListDataReceived(realm, reply->readAll());
+        reply->deleteLater();
     });
 }
 
@@ -92,8 +92,8 @@ void PoeClient::listCharacters(const QString &realm)
 
     emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
         spdlog::trace("PoE: received list: {}", tag);
-        const auto [parsed, raw] = PoeClient::unpack<CharacterListWrapper>(reply);
-        emit characterListReceived(realm, parsed.characters, raw);
+        emit characterListDataReceived(realm, reply->readAll());
+        reply->deleteLater();
     });
 }
 
@@ -124,8 +124,8 @@ void PoeClient::listStashes(const QString &realm, const QString &league)
 
     emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
         spdlog::trace("PoE: received list: {}", tag);
-        const auto [parsed, raw] = PoeClient::unpack<StashListWrapper>(reply);
-        emit stashListReceived(realm, league, parsed.stashes, raw);
+        emit stashListDataReceived(realm, league, reply->readAll());
+        reply->deleteLater();
     });
 }
 
@@ -152,14 +152,14 @@ void PoeClient::getCharacter(const QString &realm, const QString &name)
     // Send the request.
     const QString tag = parts.mid(1).join("/");
     const QUrl url(parts.join("/"));
-    spdlog::info("PoE: requesting {} with {} pending.", tag, m_pendingCharacterRequests);
-
+    spdlog::info("PoE: requesting {} ({} pending).", tag, m_pendingCharacterRequests);
     ++m_pendingCharacterRequests;
+
     emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
         --m_pendingCharacterRequests;
-        const auto [parsed, raw] = PoeClient::unpack<CharacterWrapper>(reply);
         spdlog::info("PoE: received {} ({} pending).", tag, m_pendingCharacterRequests);
-        emit characterReceived(realm, name, parsed.character, raw);
+        emit characterDataReceived(realm, name, reply->readAll());
+        reply->deleteLater();
     });
 }
 
@@ -197,16 +197,40 @@ void PoeClient::getStash(const QString &realm,
     // Send the request.
     const QString tag = parts.mid(1).join("/");
     const QUrl url(parts.join("/"));
-    spdlog::info("PoE: requesting {} with {} pending", tag, m_pendingStashRequests);
-
+    spdlog::info("PoE: requesting {} ({} pending)", tag, m_pendingStashRequests);
     ++m_pendingStashRequests;
+
     emit requestReady(endpoint, QNetworkRequest(url), [=, this](QNetworkReply *reply) {
         --m_pendingStashRequests;
-        const auto [parsed, raw] = PoeClient::unpack<StashTabWrapper>(reply);
-        const QString name = parsed.stash ? parsed.stash->name : "";
-        spdlog::info("PoE: received {} '{}' ({} pending).", tag, name, m_pendingStashRequests);
-        emit stashReceived(realm, league, stash_id, substash_id, parsed.stash, raw);
+        spdlog::info("PoE: received {} ({} pending).", tag, m_pendingStashRequests);
+        emit stashDataReceived(realm, league, stash_id, substash_id, reply->readAll());
+        reply->deleteLater();
     });
+}
+
+std::vector<poe::League> unwrapLeageList(const QByteArray &data)
+{
+    return {};
+}
+
+std::vector<poe::Character> unwrapCharacterList(const QByteArray &data)
+{
+    return {};
+}
+
+std::vector<poe::StashTab> unwrapStashList(const QByteArray &data)
+{
+    return {};
+}
+
+std::optional<poe::Character> unwrapCharacter(const QByteArray &data)
+{
+    return {};
+}
+
+std::optional<poe::StashTab> unwrapStash(const QByteArray &data)
+{
+    return {};
 }
 
 bool PoeClient::checkRealm(const QString &realm, const char *endpoint)

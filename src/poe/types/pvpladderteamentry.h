@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <poe/pvpladderteammember.h>
+#include <poe/types/pvpladderteammember.h>
 
 #include <QString>
 

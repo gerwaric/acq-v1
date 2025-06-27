@@ -14,6 +14,8 @@ static_assert(ACQUISITION_USE_SPDLOG);
 #include <QString>
 #include <QUrl>
 
+#include <QMetaEnum>
+
 #ifdef QT_DEBUG
 constexpr auto DEFAULT_LOG_LEVEL = spdlog::level::debug;
 #else
@@ -41,11 +43,11 @@ void dumpQrcDirectory(const QString &path)
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
-    QQmlApplicationEngine engine;
-
     // Set the default logging level before we do anything.
     spdlog::set_level(DEFAULT_LOG_LEVEL);
+
+    QGuiApplication app(argc, argv);
+    QQmlApplicationEngine engine;
 
     // Force constrution of the App here.
     engine.singletonInstance<App *>("Acquisition", "App");

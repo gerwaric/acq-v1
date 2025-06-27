@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "poe.h"
+#include "poe/types/item.h"
 
 #include <QString>
 

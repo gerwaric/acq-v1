@@ -5,7 +5,8 @@
 
 #include "model/iteminfo.h"
 #include "model/rootnode.h"
-#include "poe.h"
+#include <poe/types/character.h>
+#include <poe/types/stashtab.h>
 
 #include <QAbstractItemModel>
 
@@ -52,8 +53,9 @@ public:
         return index.isValid() ? static_cast<TreeNode*>(index.internalPointer()) : &m_root;
     }
 
-    void appendStash(const poe::StashTab &stash);
-    void appendCharacter(const poe::Character &character);
+public slots:
+    void loadStash(const poe::StashTab &stash);
+    void loadCharacter(const poe::Character &character);
 
 private:
     RootNode m_root;

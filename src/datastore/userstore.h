@@ -4,10 +4,13 @@
 #pragma once
 
 #include "datastore.h"
-#include "poe.h"
+#include "poe/types/character.h"
+#include "poe/types/league.h"
+#include "poe/types/stashtab.h"
 
 #include <QByteArray>
 #include <QObject>
+#include <QSqlQueryModel>
 #include <QString>
 
 #include <vector>
@@ -18,7 +21,19 @@ class UserStore : public DataStore
 public:
     explicit UserStore(const QString &username, QObject *parent = nullptr);
 
-    QSqlDatabase getDatabase() { return getThreadLocalDatabase(); };
+    QSqlQueryModel &getCharacterModel() { return m_characterModel; }
+    QSqlQueryModel &getStashModel() { return m_stashModel; }
+
+    QStringList getLeagueNames(const QString &realm);
+
+    std::vector<poe::League> getLeagueList(const QString &realm);
+    std::vector<poe::Character> getCharacterList(const QString &realm);
+    std::vector<poe::StashTab> getStashList(const QString &realm, const QString &league);
+
+    std::optional<poe::Character> getCharacter(const QString &realm, const QString &name);
+    std::optional<poe::StashTab> getStash(const QString &realm,
+                                          const QString &league,
+                                          const QString &id);
 
     void loadLeagueList(const QString &realm);
     void loadCharacterList(const QString &realm);
@@ -27,43 +42,38 @@ public:
     void loadStashes(const QString &realm, const QString &league);
 
 signals:
-    void leagueListReceived(std::vector<poe::League> leagueList);
-    void characterListReceived(std::vector<poe::Character> characterList);
-    void characterReceived(poe::Character character);
-    void stashListReceived(std::vector<poe::StashTab> stashList);
-    void stashReceived(poe::StashTab stash);
+    void leagueListReady(std::vector<poe::League> leagueList);
+    void characterListReady(std::vector<poe::Character> characterList);
+    void characterReady(poe::Character character);
+    void stashListReady(const QString &realm,
+                        const QString &league,
+                        std::vector<poe::StashTab> stashList);
+    void stashReady(const QString &realm, const QString &league, poe::StashTab stash);
 
 public slots:
-    void saveLeagueList(const QString &realm,
-                        const std::vector<poe::League> &leagues,
+    void storeLeagueListData(const QString &realm, const QByteArray &data);
+
+    void storeCharacterListData(const QString &realm, const QByteArray &data);
+
+    void storeStashListData(const QString &realm, const QString &league, const QByteArray &data);
+
+    void storeCharacterData(const QString &realm, const QString &name, const QByteArray &data);
+
+    void storeStashData(const QString &realm,
+                        const QString &league,
+                        const QString &stash_id,
+                        const QString &substash_id,
                         const QByteArray &data);
 
-    void saveCharacterList(const QString &realm,
-                           const std::vector<poe::Character> &characters,
-                           const QByteArray &data);
-
-    void saveStashList(const QString &realm,
-                       const QString &league,
-                       const std::vector<poe::StashTab> &stashes,
-                       const QByteArray &data);
-
-    void saveCharacter(const QString &realm,
-                       const QString &name,
-                       const std::optional<poe::Character> &character,
-                       const QByteArray &data);
-
-    void saveStash(const QString &realm,
-                   const QString &league,
-                   const QString &stash_id,
-                   const QString &substash_id,
-                   const std::optional<poe::StashTab> &stash,
-                   const QByteArray &data);
-
 private:
+    QByteArray getIndex(const QString &name, const QString &realm, const QString &league);
     void updateIndex(const QString &name,
                      const QString &realm,
                      const QString &league,
                      const QByteArray &data);
+
+    QSqlQueryModel m_characterModel;
+    QSqlQueryModel m_stashModel;
 
     static QString getPath(const QString &username);
 };

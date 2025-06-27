@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <poe/leaguerule.h>
+#include <poe/types/leaguerule.h>
 
 #include <QString>
 

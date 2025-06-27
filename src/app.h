@@ -6,11 +6,10 @@
 #include "app_version.h"
 #include "networkmanager.h"
 #include "oauthmanager.h"
-#include "poe.h"
 #include "poeclient.h"
+#include "poerepo.h"
 
 #include "datastore/globalstore.h"
-#include "datastore/userstore.h"
 #include "model/treemodel.h"
 #include "ratelimit/ratelimiter.h"
 
@@ -32,20 +31,21 @@ class App : public QObject
     QML_ELEMENT
 
     Q_PROPERTY(QString version READ version CONSTANT)
-    Q_PROPERTY(QString debugLevel READ getDebugLevel WRITE setDebugLevel NOTIFY debugLevelChanged)
-    Q_PROPERTY(QString realm MEMBER m_realm)
-    Q_PROPERTY(QString league MEMBER m_league)
-    Q_PROPERTY(QString character MEMBER m_character)
+    Q_PROPERTY(QString logLevel READ getLogLevel WRITE setLogLevel NOTIFY logLevelChanged)
+    //Q_PROPERTY(QString realm MEMBER m_realm)
+    //Q_PROPERTY(QString league MEMBER m_league)
+    //Q_PROPERTY(QString character MEMBER m_character)
     Q_PROPERTY(QString rateLimitStatus MEMBER m_rateLimitStatus NOTIFY rateLimitStatusChanged)
 
     Q_PROPERTY(bool isAuthenticated READ isAuthenticated NOTIFY authenticationStateChanged)
     Q_PROPERTY(QString username READ getUsername NOTIFY authenticationStateChanged)
 
-    Q_PROPERTY(QStringList leagues READ getLeagueNames NOTIFY leaguesUpdated)
-    Q_PROPERTY(QStringList characters READ getCharacterNames NOTIFY charactersUpdated)
-    Q_PROPERTY(QStringList stashes READ getStashNames NOTIFY stashesUpdated)
+    //Q_PROPERTY(QStringList realms READ getRealmList CONSTANT)
+    //Q_PROPERTY(QStringList leagues READ getLeagueList NOTIFY leagueListUpdated)
+    //Q_PROPERTY(QStringList characters READ getCharacterList NOTIFY characterListUpdated)
+    //Q_PROPERTY(QStringList stashes READ getStashList NOTIFY stashListUpdated)
 
-    Q_PROPERTY(PoeClient *poeClient READ getPoeClient CONSTANT)
+    //Q_PROPERTY(PoeClient *poeClient READ getPoeClient CONSTANT)
 
     Q_PROPERTY(QSqlQueryModel *characterModel READ getCharacterModel CONSTANT)
     Q_PROPERTY(QAbstractItemModel *stashModel READ getStashModel CONSTANT)
@@ -58,33 +58,30 @@ public:
     Q_INVOKABLE void getCharacter();
     Q_INVOKABLE void getAllCharacters();
     Q_INVOKABLE void getAllStashes();
-
     Q_INVOKABLE void loadSelectedCharacters();
     Q_INVOKABLE void loadSelectedStashes();
 
-    QString getDebugLevel() const { return m_debugLevel; };
-    void setDebugLevel(const QString &level)
-    {
-        m_debugLevel = level;
-        spdlog::set_level(spdlog::level::from_str(level.toUtf8().toStdString()));
-        spdlog::info("App: logging level set to {}", spdlog::get_level());
-    };
+    QString getLogLevel() const;
+    Q_INVOKABLE void setLogLevel(const QString &level);
 
     QString version() const { return APP_VERSION_STRING; };
     bool isAuthenticated() const { return m_authenticated; };
     QString getUsername() const { return m_username; };
-    PoeClient *getPoeClient() { return &m_poeClient; };
+    //PoeClient *getPoeClient() { return &m_poeClient; };
 
-    QStringList getLeagueNames() const;
+    Q_INVOKABLE QStringList getRealmNames() const;
+    Q_INVOKABLE QStringList getLeagueNames(const QString &realm) const;
+    Q_INVOKABLE void loadItems(const QString &realm, const QString &league);
+
     QStringList getCharacterNames() const;
     QStringList getStashNames() const;
 
-    QSqlQueryModel *getCharacterModel() { return &m_characterModel; }
-    QSqlQueryModel *getStashModel() { return &m_stashModel; }
+    QSqlQueryModel *getCharacterModel() { return m_repo ? &m_repo->getCharacterModel() : nullptr; }
+    QSqlQueryModel *getStashModel() { return m_repo ? &m_repo->getStashModel() : nullptr; }
     QAbstractItemModel *getItemModel() { return &m_itemModel; }
 
 signals:
-    void debugLevelChanged();
+    void logLevelChanged();
     void authenticationStateChanged();
 
     void leaguesUpdated();
@@ -127,9 +124,10 @@ private:
     GlobalStore m_globalStore;
     OAuthManager m_oauthManager;
     RateLimiter m_rateLimiter;
-    PoeClient m_poeClient;
+    PoeClient m_client;
+    TreeModel m_itemModel;
 
-    UserStore *m_userStore{nullptr};
+    std::unique_ptr<PoeRepo> m_repo;
 
     bool m_authenticated{false};
     QString m_debugLevel;
@@ -143,7 +141,4 @@ private:
     std::vector<poe::Character> m_characterList;
     std::vector<poe::StashTab> m_stashList;
 
-    QSqlQueryModel m_characterModel;
-    QSqlQueryModel m_stashModel;
-    TreeModel m_itemModel;
 };

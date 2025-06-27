@@ -35,6 +35,8 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     poe.h
     poeclient.cpp
     poeclient.h
+    poerepo.cpp
+    poerepo.h
     settingsmanager.cpp
     settingsmanager.h
     # Item Model
@@ -59,6 +61,8 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     # Utilities
     util/glaze_qt.h
     util/json.h
+    util/qt.cpp
+    util/qt.h
     util/rfc2822.cpp
     util/rfc2822.h
     util/spdlog_qt.h
@@ -70,32 +74,33 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     datastore/userstore.cpp
     datastore/userstore.h
     # Path of Exile API types
-    poe/account.h
-    poe/accountprofile.h
-    poe/character.h
-    poe/cruciblenode.h
-    poe/displaymode.h
-    poe/eventladderentry.h
-    poe/frametype.h
-    poe/guild.h
-    poe/item.h
-    poe/itemfilter.h
-    poe/itemjeweldata.h
-    poe/itemproperty.h
-    poe/itemsocket.h
-    poe/ladderentry.h
-    poe/league.h
-    poe/leagueaccount.h
-    poe/leaguerule.h
-    poe/passivegroup.h
-    poe/passivenode.h
-    poe/publicstashchange.h
-    poe/pvpladderteamentry.h
-    poe/pvpladderteammember.h
-    poe/pvpmatch.h
-    poe/stashtab.h
-    poe/webcharacter.h
-    poe/webstashtab.h
+    poe/types/account.h
+    poe/types/accountprofile.h
+    poe/types/character.h
+    poe/types/cruciblenode.h
+    poe/types/displaymode.h
+    poe/types/enums.h
+    poe/types/eventladderentry.h
+    poe/types/frametype.h
+    poe/types/guild.h
+    poe/types/item.h
+    poe/types/itemfilter.h
+    poe/types/itemjeweldata.h
+    poe/types/itemproperty.h
+    poe/types/itemsocket.h
+    poe/types/ladderentry.h
+    poe/types/league.h
+    poe/types/leagueaccount.h
+    poe/types/leaguerule.h
+    poe/types/passivegroup.h
+    poe/types/passivenode.h
+    poe/types/publicstashchange.h
+    poe/types/pvpladderteamentry.h
+    poe/types/pvpladderteammember.h
+    poe/types/pvpmatch.h
+    poe/types/stashtab.h
+    poe/types/webcharacter.h
+    poe/types/webstashtab.h
     # API rate limiting
     ratelimit/ratelimit.cpp
     ratelimit/ratelimit.h
@@ -117,7 +122,10 @@ qt_add_qml_module(acquisition
     URI "Acquisition"
     QML_FILES
         main.qml
-        qml/MainControlPanel.qml
+        qml/CharactersTab.qml
+        qml/ItemsTab.qml
+        qml/SettingsTab.qml
+        qml/StashesTab.qml
 )
 
 target_include_directories(acquisition PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

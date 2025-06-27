@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <poe/account.h>
+#include <poe/types/account.h>
 
 #include <QString>
 

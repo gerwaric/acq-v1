@@ -3,10 +3,14 @@
 
 #pragma once
 
+#include <poe/types/enums.h>
+
 namespace poe {
 
     // https://www.pathofexile.com/developer/docs/reference#type-DisplayMode
 
+    using DisplayMode = poe_enums::DisplayMode;
+    /*
     enum class DisplayMode : unsigned {
 
         NameFirst = 0,      // Name should be followed by values
@@ -14,7 +18,7 @@ namespace poe {
         ProgressBar = 2,    // Progress bar
         InsertedValues = 3, // Values should be inserted into the string by index
         Separator = 4       // Separator
-
     };
+    */
 
 } // namespace poe

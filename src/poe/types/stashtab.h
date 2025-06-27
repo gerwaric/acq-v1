@@ -5,7 +5,7 @@
 
 #include <QString>
 
-#include <poe/item.h>
+#include <poe/types/item.h>
 
 #include <glaze/glaze.hpp>
 
@@ -42,7 +42,8 @@ namespace poe {
         };
 
         QString id;                       // string a 10 digit hexadecimal string
-        std::optional<QString> folder;    // ? string a 10 digit hexadecimal string TODO: new
+        std::optional<QString> folder;    // ? string a 10 digit hexadecimal string
+        std::optional<QString> parent;    // ? string a 10 digit hexadecimal string
         QString name;                     // string
         QString type;                     // string
         std::optional<unsigned> index;    // ? uint
