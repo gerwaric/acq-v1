@@ -22,6 +22,10 @@ Item {
                 text: "Get Stashes"
                 onClicked: App.getStashesTemp2()
             }
+            Item {
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+            }
         }
 
         ColumnLayout {

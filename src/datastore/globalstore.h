@@ -27,8 +27,8 @@ public:
     template<typename T>
     std::pair<T, bool> retrieve(const QString &key)
     {
-        const QString strval = get(key).toString();
-        return json::parse_strict<T>(strval);
+        const QByteArray data = get(key).toByteArray();
+        return json::parse<T>(data, json::Mode::Strict);
     };
 
 private:

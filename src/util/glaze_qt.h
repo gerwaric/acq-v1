@@ -15,7 +15,8 @@
 #include <string>
 #include <unordered_map>
 
-#define ACQUISITION_USE_GLAZE
+// This is a helper define to avoid Qt Creator's warnings that this header is unused.
+constexpr bool ACQUISITION_USE_GLAZE = true;
 
 // This file add support to glaze for:
 //

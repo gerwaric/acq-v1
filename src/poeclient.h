@@ -46,13 +46,6 @@ public:
     static std::optional<poe::Character> unwrapCharacter(const QByteArray &data);
     static std::optional<poe::StashTab> unwrapStash(const QByteArray &data);
 
-    /*
-    void getCharacters(const std::vector<poe::Character> &characters);
-    void getStashes(const QString &realm,
-                    const QString &league,
-                    const std::vector<poe::StashTab> &stashes);
-    */
-
 signals:
 
     // Emitted when we want to send an API request.

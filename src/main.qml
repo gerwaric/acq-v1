@@ -23,7 +23,6 @@ ApplicationWindow {
         property alias width: window.width
         property alias height: window.height
         property alias logLevel: logLevel.currentIndex
-        property alias tabIndex: tabs.currentIndex
     }
 
     footer: RowLayout {
@@ -65,47 +64,5 @@ ApplicationWindow {
         }
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 10
-        enabled: App.isAuthenticated
-
-        TabBar {
-            id: tabs
-            Layout.fillWidth: parent
-            //TabButton { padding: 10; text: "Settings" }
-            TabButton { padding: 10; text: "Characters" }
-            TabButton { padding: 10; text: "Stash Tabs" }
-            TabButton { padding: 10; text: "Items" }
-        }
-
-        StackLayout {
-            Layout.fillHeight: true
-            Layout.fillWidth: true
-            currentIndex: tabs.currentIndex
-
-            /*
-            SettingsTab {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-            }
-            */
-
-            CharactersTab {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-            }
-
-            StashesTab {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-            }
-
-            ItemsTab {
-                Layout.fillHeight: true
-                Layout.fillWidth: true
-            }
-
-        }
-    }
+    MainTabs {}
 }

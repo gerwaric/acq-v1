@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Acquisition
-import Acquisition.qml
 
 Item {
     id: characterTab

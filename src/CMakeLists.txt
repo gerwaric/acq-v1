@@ -124,6 +124,7 @@ qt_add_qml_module(acquisition
         main.qml
         qml/CharactersTab.qml
         qml/ItemsTab.qml
+        qml/MainTabs.qml
         qml/SettingsTab.qml
         qml/StashesTab.qml
 )

@@ -7,10 +7,11 @@
 #include "poe/types/character.h"
 #include "poe/types/league.h"
 #include "poe/types/stashtab.h"
+#include "poeclient.h"
 
 #include <QByteArray>
 #include <QObject>
-#include <QSqlQueryModel>
+#include <QSqlDatabase>
 #include <QString>
 
 #include <vector>
@@ -21,8 +22,9 @@ class UserStore : public DataStore
 public:
     explicit UserStore(const QString &username, QObject *parent = nullptr);
 
-    QSqlQueryModel &getCharacterModel() { return m_characterModel; }
-    QSqlQueryModel &getStashModel() { return m_stashModel; }
+    void connectTo(PoeClient &client);
+
+    QSqlDatabase getDatabase() { return getThreadLocalDatabase(); }
 
     QStringList getLeagueNames(const QString &realm);
 
@@ -71,9 +73,6 @@ private:
                      const QString &realm,
                      const QString &league,
                      const QByteArray &data);
-
-    QSqlQueryModel m_characterModel;
-    QSqlQueryModel m_stashModel;
 
     static QString getPath(const QString &username);
 };

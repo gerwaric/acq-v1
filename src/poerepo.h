@@ -11,6 +11,7 @@
 #include "poeclient.h"
 
 #include <QObject>
+#include <QSqlDatabase>
 #include <QString>
 
 class PoeRepo : public QObject
@@ -19,8 +20,7 @@ class PoeRepo : public QObject
 public:
     PoeRepo(const QString &username, QObject *parent = nullptr);
 
-    QSqlQueryModel &getCharacterModel() { return m_datastore.getCharacterModel(); }
-    QSqlQueryModel &getStashModel() { return m_datastore.getStashModel(); }
+    QSqlDatabase getDatabse() { return m_datastore.getDatabase(); }
 
     std::vector<poe::League> getLeagueList(const QString &realm);
     std::vector<poe::Character> getCharacterList(const QString &realm);
@@ -39,6 +39,13 @@ public:
                      const QString &league,
                      const QString &stash_id,
                      const QString &substash_id);
+
+    void loadCharacters(const QString &realm, const QString &league);
+    void loadStashes(const QString &realm, const QString &league);
+
+signals:
+    void characterLoaded(QString realm, QString league, poe::Character character);
+    void stashLoaded(QString realm, QString league, poe::StashTab stash);
 
 private:
     PoeClient m_client;
