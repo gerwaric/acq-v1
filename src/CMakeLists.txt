@@ -1,31 +1,14 @@
 # Copyright (C) 2025 Tom Holz.
 # SPDX-License-Identifier: GPL-3.0-only
 
-# Generate version.h
-configure_file(
-    ${CMAKE_SOURCE_DIR}/config/app_version.h.in
-    ${CMAKE_CURRENT_BINARY_DIR}/generated/app_version.h
-    @ONLY
-)
-
-# Generate versioninfo.rc
-configure_file(
-    ${CMAKE_SOURCE_DIR}/config/app_versioninfo.rc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/generated/app_versioninfo.rc
-    @ONLY
-)
-
-
-# Add generated header directory to include path
-add_library(version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated/app_version.h)
-target_include_directories(version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated)
-
 qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     # Entry point
     main.cpp
     # Other stuff
     app.cpp
     app.h
+    itemtooltip.cpp
+    itemtooltip.h
     networkmanager.cpp
     networkmanager.h
     oauthtoken.cpp
@@ -118,19 +101,41 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     ratelimit/ratelimitpolicy.h
 )
 
+#[[
 qt_add_qml_module(acquisition
     URI "Acquisition"
     QML_FILES
         main.qml
         qml/CharactersTab.qml
         qml/ItemsTab.qml
+        qml/ItemTooltip.qml
         qml/MainTabs.qml
         qml/SettingsTab.qml
         qml/StashesTab.qml
 )
+#]]
 
 target_include_directories(acquisition PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
+# Generate version.h
+configure_file(
+    ${CMAKE_SOURCE_DIR}/config/app_version.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/app_version.h
+    @ONLY
+)
+
+# Generate versioninfo.rc
+configure_file(
+    ${CMAKE_SOURCE_DIR}/config/app_versioninfo.rc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/app_versioninfo.rc
+    @ONLY
+)
+
+# Add generated header directory to include path
+add_library(version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated/app_version.h)
+target_include_directories(version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+
+# Link everything into acquisition
 target_link_libraries(acquisition
     PRIVATE
     # Qt Libraries

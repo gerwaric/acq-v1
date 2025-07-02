@@ -45,3 +45,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui NetworkAuth Qml Quick Sql)
 qt_standard_project_setup(REQUIRES 6.9)
 
 add_subdirectory(src)
+add_subdirectory(qml)
+add_subdirectory(assets)
+
+target_link_libraries(acquisition PRIVATE acquisition_resources)

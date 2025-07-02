@@ -15,10 +15,12 @@ App::App(QObject *parent)
     : QObject(parent)
     , m_oauthManager(m_networkManager)
     , m_rateLimiter(m_networkManager)
+    , m_itemSelectionModel(&m_itemModel)
 {
     connect(&m_oauthManager, &OAuthManager::grantAccess, this, &App::accessGranted);
     connect(&m_rateLimiter, &RateLimiter::Paused, this, &App::rateLimited);
     connect(&m_client, &PoeClient::requestReady, &m_rateLimiter, &RateLimiter::makeRequest);
+    connect(&m_itemSelectionModel, &QItemSelectionModel::currentChanged, this, &App::onItemSelected);
 
     // Look for an existing username.
     const QString username = m_globalStore.get("last_username").toString();
@@ -87,6 +89,8 @@ void App::loadItems(const QString &realm, const QString &league)
         spdlog::error("App: cannot load items: repo is uninitialized.");
         return;
     }
+    m_clientStore->loadCharacters(realm, league);
+    m_clientStore->loadStashes(realm, league);
 }
 
 QStringList App::getCharacterNames() const
@@ -195,6 +199,10 @@ void App::accessGranted(const OAuthToken &token)
     m_clientStore = std::make_unique<UserStore>(m_username);
     m_clientStore->connectTo(m_client);
 
+    auto *client = m_clientStore.get();
+    connect(client, &UserStore::characterReady, &m_itemModel, &TreeModel::loadCharacter);
+    connect(client, &UserStore::stashReady, &m_itemModel, &TreeModel::loadStash);
+
     QSqlDatabase db = m_clientStore->getDatabase();
     m_characterTableModel.setQuery("SELECT name, realm, league, timestamp FROM characters", db);
     m_stashTableModel.setQuery("SELECT name, type, league, id, parent, timestamp from stashes", db);
@@ -224,46 +232,6 @@ void App::handleCharacterList(const QString &realm,
 {
     m_characterList = characters;
     emit charactersUpdated();
-}
-
-void App::handleCharacter(const QString &realm,
-                          const QString &name,
-                          const std::optional<poe::Character> &character,
-                          const QByteArray &data)
-{
-    if (character) {
-        m_itemModel.loadCharacter(character.value());
-    } else {
-        spdlog::error("App: character is empty: realm({}) name({})", realm, name);
-    }
-}
-
-void App::handleStash(const QString &realm,
-                      const QString &league,
-                      const QString &stash_id,
-                      const QString &substash_id,
-                      const std::optional<poe::StashTab> &stash,
-                      const QByteArray &data)
-{
-    if (stash) {
-        m_itemModel.loadStash(stash.value());
-    } else {
-        spdlog::error("App: stash is empty: realm({}) league({}) stash_id({}) substash_id({})",
-                      realm,
-                      league,
-                      stash_id,
-                      substash_id);
-    }
-}
-
-void App::handleStashList(const QString &realm,
-                          const QString &league,
-                          const std::vector<poe::StashTab> &stashes,
-                          const QByteArray &data)
-{
-    spdlog::info("App: received a list of stashes with {} items.", stashes.size());
-    m_stashList = stashes;
-    emit stashesUpdated();
 }
 
 void App::loadSelectedCharacters()

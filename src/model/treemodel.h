@@ -14,9 +14,13 @@ class TreeModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
-
     explicit TreeModel(QObject* parent = nullptr);
     ~TreeModel() override {};
+
+    inline Qt::ItemFlags flags(const QModelIndex &index) const override
+    {
+        return index.isValid() ? (Qt::ItemIsEnabled | Qt::ItemIsSelectable) : Qt::NoItemFlags;
+    }
 
     // Returns the index of the item in the model specified by the given row, column and parent index.
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;

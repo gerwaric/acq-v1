@@ -43,7 +43,7 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
     Q_UNUSED(orientation);
     if (role == Qt::DisplayRole) {
         if ((section >= 0) && (section < ItemInfo::ColumnCount)) {
-            return ItemInfo::Columns[section].header;
+            return ItemInfo::Columns[section].name;
         }
     }
     return QVariant();

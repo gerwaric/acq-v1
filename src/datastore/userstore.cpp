@@ -394,7 +394,7 @@ void UserStore::loadStashes(const QString &realm, const QString &league)
         } else if (!wrapper.stash) {
             spdlog::error("UserData: stash wrapper is empty");
         } else {
-            emit stashReady(realm, league, wrapper.stash.value());
+            emit stashReady(wrapper.stash.value());
         }
     }
 }
@@ -544,7 +544,7 @@ void UserStore::storeStashData(const QString &realm,
     query.bindValue(":data", data);
 
     if (query.exec()) {
-        emit stashReady(realm, league, stash);
+        emit stashReady(stash);
     } else {
         const QString message = query.lastError().text();
         spdlog::error("UserStore: failed to update stash for {} realm in {} league with "

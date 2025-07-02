@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         },
         Qt::QueuedConnection);
 
-    engine.load(QUrl("qrc:/qt/qml/Acquisition/main.qml"));
+    engine.load(QUrl("qrc:/qt/qml/Acquisition/Main.qml"));
 
     return app.exec();
 }

@@ -50,7 +50,7 @@ signals:
     void stashListReady(const QString &realm,
                         const QString &league,
                         std::vector<poe::StashTab> stashList);
-    void stashReady(const QString &realm, const QString &league, poe::StashTab stash);
+    void stashReady(poe::StashTab stash);
 
 public slots:
     void storeLeagueListData(const QString &realm, const QByteArray &data);

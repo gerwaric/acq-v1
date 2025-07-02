@@ -5,6 +5,8 @@
 
 #include "poe/types/item.h"
 
+#include "util/glaze_qt.h"
+
 #include <QString>
 
 #include <type_traits>
@@ -15,7 +17,7 @@ namespace {
 
     struct Column
     {
-        const char *header;
+        const char *name;
         QVariant (*getter)(ItemInfo const &);
     };
 
@@ -43,7 +45,7 @@ namespace {
 
 struct ItemInfo
 {
-    ItemInfo(const poe::Item& item);
+    ItemInfo(const poe::Item &item);
 
     QString id;
     QString name;
@@ -75,7 +77,8 @@ struct ItemInfo
     int abyssSockets{0}; // custom extension
     int totalSockets{0};
 
-    struct SocketGroup {
+    struct SocketGroup
+    {
         unsigned red;
         unsigned green;
         unsigned blue;
@@ -127,21 +130,18 @@ struct ItemInfo
     QString foilVariation;
     int scourgeTier{0};
 
-    // clang-format off
     static constexpr Column Columns[] = {
-        //{ "Id",          &get<&ItemInfo::id>                   },
-        { "Name",        &get<&ItemInfo::prettyName>           },
-        { "Rarity",      &get<&ItemInfo::itemRarity>           },
-        { "Base Type",   &get<&ItemInfo::baseType>             },
-        { "Armour",      &get<&ItemInfo::armour>               },
-        { "Evasion",     &get<&ItemInfo::evasionRating>        },
-        { "ES",          &get<&ItemInfo::energyShield>         },
-        { "Req. Level",  &get<&ItemInfo::requiredLevel>        },
-        { "Req. Str",    &get<&ItemInfo::requiredStrength>     },
-        { "Req. Dex",    &get<&ItemInfo::requiredDexterity>    },
-        { "Req. Int",    &get<&ItemInfo::requiredIntelligence> },
+        {"Name", &get<&ItemInfo::prettyName>},
+        {"Armour", &get<&ItemInfo::armour>},
+        {"Evasion", &get<&ItemInfo::evasionRating>},
+        {"Energy Shield", &get<&ItemInfo::energyShield>},
+        /*
+        {"Min Level", &get<&ItemInfo::requiredLevel>},
+        {"Min Str", &get<&ItemInfo::requiredStrength>},
+        {"Min Dex", &get<&ItemInfo::requiredDexterity>},
+        {"Min Int", &get<&ItemInfo::requiredIntelligence>},
+        */
     };
-    // clang-format on
 
     static constexpr int ColumnCount = sizeof(Columns) / sizeof(*Columns);
 
@@ -156,3 +156,85 @@ private:
 
     static float average(const QString &ranged_value, bool *ok);
 };
+
+// clang-format off
+template <>
+struct glz::meta<ItemInfo> {
+    static constexpr auto value = glz::object(
+
+        &ItemInfo::id, "id",
+        &ItemInfo::name, "name",
+        &ItemInfo::typeLine, "typeLine",
+        &ItemInfo::prettyName, "prettyName",
+        &ItemInfo::baseType, "baseType",
+        &ItemInfo::itemCategory, "itemCategory",
+        &ItemInfo::itemRarity, "itemRarity",
+        
+        &ItemInfo::damage, "damage",
+        &ItemInfo::criticalChance, "criticalChance",
+        &ItemInfo::physicalDps, "physicalDps",
+        &ItemInfo::attacksPerSecond, "attacksPerSecond",
+        &ItemInfo::totalDps, "totalDps",
+        &ItemInfo::elementalDps, "elementalDps",
+        &ItemInfo::chaosDps, "chaosDps",
+        
+        &ItemInfo::armour, "armour",
+        &ItemInfo::energyShield, "energyShield",
+        &ItemInfo::block, "block",
+        &ItemInfo::evasionRating, "evasionRating",
+        &ItemInfo::ward, "ward",
+        &ItemInfo::baseBercentile, "baseBercentile",
+        
+        &ItemInfo::redSockets, "redSockets",
+        &ItemInfo::greenSockets, "greenSockets",
+        &ItemInfo::blueSockets, "blueSockets",
+        &ItemInfo::whiteSockets, "whiteSockets",
+        &ItemInfo::abyssSockets, "abyssSockets",
+        &ItemInfo::totalSockets, "totalSockets",
+        
+        &ItemInfo::requiredLevel, "requiredLevel",
+        &ItemInfo::requiredStrength, "requiredStrength",
+        &ItemInfo::requiredDexterity, "requiredDexterity",
+        &ItemInfo::requiredIntelligence, "requiredIntelligence",
+        &ItemInfo::requiredClass, "requiredClass",
+        
+        &ItemInfo::requiredLockingLevel, "requiredLockingLevel",
+        &ItemInfo::requiredBruteForceLevel, "requiredBruteForceLevel",
+        &ItemInfo::requiredPerceptionLevel, "requiredPerceptionLevel",
+        &ItemInfo::requiredDemolutionLevel, "requiredDemolutionLevel",
+        &ItemInfo::requiredCounterThaumaturgyLevel, "requiredCounterThaumaturgyLevel",
+        &ItemInfo::requiredTrapDisarmamentLevel, "requiredTrapDisarmamentLevel",
+        &ItemInfo::requiredAgilityLevel, "requiredAgilityLevel",
+        &ItemInfo::requiredDeceptionLevel, "requiredDeceptionLevel",
+        &ItemInfo::requiredEngineeringLevel, "requiredEngineeringLevel",
+        
+        &ItemInfo::quality, "quality",
+        &ItemInfo::itemLevel, "itemLevel",
+        &ItemInfo::gemLevel, "gemLevel",
+        &ItemInfo::gemExperience, "gemExperience",
+        
+        &ItemInfo::transiguredGem, "transiguredGem",
+        &ItemInfo::vaalGem, "vaalGem",
+        &ItemInfo::corpseType, "corpseType",
+        &ItemInfo::crucible, "crucible",
+        &ItemInfo::fractured, "fractured",
+        &ItemInfo::synthesised, "synthesised",
+        &ItemInfo::searingExarch, "searingExarch",
+        &ItemInfo::eaterOfWorlds, "eaterOfWorlds",
+        &ItemInfo::identified, "identified",
+        &ItemInfo::corrupted, "corrupted",
+        &ItemInfo::mirrored, "mirrored",
+        &ItemInfo::split, "split",
+        &ItemInfo::crafted, "crafted",
+        &ItemInfo::veiled, "veiled",
+        &ItemInfo::forseeing, "forseeing",
+        &ItemInfo::talismanTier, "talismanTier",
+        &ItemInfo::storedExperience, "storedExperience",
+        &ItemInfo::stackSize, "stackSize",
+        &ItemInfo::alternateArt, "alternateArt",
+        &ItemInfo::foilVariation, "foilVariation",
+        &ItemInfo::scourgeTier, "scourgeTier"
+    );
+};
+
+// clang-format on    

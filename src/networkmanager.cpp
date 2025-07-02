@@ -9,6 +9,15 @@
 
 static_assert(ACQUISITION_USE_SPDLOG); // Prevents unused header warnings in Qt Creator.
 
+#include <QDir>
+#include <QStandardPaths>
+
+// Size of the network disk cache.
+constexpr const int CACHE_SIZE_MEGABYTES = 100;
+
+constexpr const char *POE_API_HOST = "api.pathofexile.com";
+constexpr const char *POE_CDN_HOST = "web.poecdn.com";
+
 // This list is current as of Qt 6.9.1:
 // https://doc.qt.io/qt-6/qnetworkrequest.html#Attribute-enum
 //
@@ -47,11 +56,18 @@ constexpr std::array<std::pair<QNetworkRequest::Attribute, const char *>, 28> KN
 // clang-format on
 
 NetworkManager::NetworkManager(QObject *parent)
-    : QNetworkAccessManager(parent) {};
+    : QNetworkAccessManager(parent)
+{
+    const auto data_dir = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation);
+    const auto cache_dir = data_dir + QLatin1StringView("/network_cache/");
+    m_diskCache.setCacheDirectory(cache_dir);
+    m_diskCache.setMaximumCacheSize(CACHE_SIZE_MEGABYTES * 1024 * 1024);
+    setCache(&m_diskCache);
+}
 
 void NetworkManager::setBearerToken(const QString &token)
 {
-    m_bearer_token = token.isEmpty() ? "" : ("Bearer " + token.toUtf8());
+    m_bearerToken = token.isEmpty() ? "" : ("Bearer " + token.toUtf8());
 }
 
 QNetworkReply *NetworkManager::createRequest(QNetworkAccessManager::Operation op,
@@ -62,12 +78,18 @@ QNetworkReply *NetworkManager::createRequest(QNetworkAccessManager::Operation op
     QNetworkRequest request(originalRequest);
     request.setRawHeader("User-Agent", APP_USER_AGENT);
 
-    // Conditionally add a bearer token (for API calls).
-    if (request.url().host() == "api.pathofexile.com") {
-        if (m_bearer_token.isEmpty()) {
+    const auto host = request.url().host();
+
+    if (host == POE_API_HOST) {
+        // Add a bearer token for api calls.
+        if (m_bearerToken.isEmpty()) {
             spdlog::error("API calls may fail because the bearer token is empty.");
         }
-        request.setRawHeader("Authorization", m_bearer_token);
+        request.setRawHeader("Authorization", m_bearerToken);
+    } else if (host == POE_CDN_HOST) {
+        // Prefer the cache for cdn content.
+        request
+            .setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
     }
 
     spdlog::trace("Network: requesting {}", request.url().toDisplayString());

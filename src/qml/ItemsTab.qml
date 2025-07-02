@@ -8,9 +8,8 @@ import Acquisition.qml
 Item {
     id: itemsTab
 
-    SplitView {
+    RowLayout {
         anchors.fill: parent
-        orientation: Qt.Horizontal
 
         GridLayout {
             Layout.minimumWidth: 200
@@ -67,10 +66,25 @@ Item {
 
                 model: App.itemsModel
 
+                selectionModel: ItemSelectionModel {
+                    model: itemsView.model
+                }
+
                 delegate: TreeViewDelegate {}
 
                 ScrollBar.horizontal: ScrollBar {}
                 ScrollBar.vertical:   ScrollBar {}
+            }
+        }
+
+        ColumnLayout {
+            Layout.preferredWidth: 100
+            Layout.fillHeight: true
+
+            Image {
+                id: itemImage
+                anchors.right: parent.right
+                fillMode: Image.PreserveAspectFit
             }
         }
     }

@@ -6,6 +6,7 @@
 #include <QHttpHeaders>
 #include <QIODevice>
 #include <QNetworkAccessManager>
+#include <QNetworkDiskCache>
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QObject>
@@ -30,7 +31,8 @@ protected:
                                  QIODevice *outgoingData = nullptr) override;
 
 private:
-    QByteArray m_bearer_token;
+    QNetworkDiskCache m_diskCache;
+    QByteArray m_bearerToken;
 
     using AttributeGetter = std::function<QVariant(QNetworkRequest::Attribute)>;
 

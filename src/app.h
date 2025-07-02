@@ -4,6 +4,7 @@
 #pragma once
 
 #include "app_version.h"
+#include "itemtooltip.h"
 #include "networkmanager.h"
 #include "oauthmanager.h"
 #include "poeclient.h"
@@ -14,6 +15,7 @@
 #include "ratelimit/ratelimiter.h"
 
 #include <QAbstractItemModel>
+#include <QItemSelectionModel>
 #include <QObject>
 #include <QSqlQueryModel>
 #include <QSqlTableModel>
@@ -37,6 +39,8 @@ class App : public QObject
     Q_PROPERTY(bool isAuthenticated READ isAuthenticated NOTIFY authenticationStateChanged)
     Q_PROPERTY(QString username READ getUsername NOTIFY authenticationStateChanged)
 
+    Q_PROPERTY(QItemSelectionModel *itemSelectionModel READ getItemSelectionModel CONSTANT)
+    Q_PROPERTY(ItemTooltip *itemTooltip READ getItemTooltip CONSTANT)
     Q_PROPERTY(QSqlQueryModel *characterModel READ getCharacterModel CONSTANT)
     Q_PROPERTY(QAbstractItemModel *stashModel READ getStashModel CONSTANT)
     Q_PROPERTY(QAbstractItemModel *itemsModel READ getItemModel CONSTANT)
@@ -64,7 +68,11 @@ public:
 
     QStringList getCharacterNames() const;
     QStringList getStashNames() const;
+    QString getSelectedItemIconUrl() const { return m_selectedItemImageUrl; }
 
+    // property getters
+    QItemSelectionModel *getItemSelectionModel() { return &m_itemSelectionModel; }
+    ItemTooltip *getItemTooltip() { return &m_tooltip; }
     QSqlQueryModel *getCharacterModel() { return &m_characterTableModel; }
     QSqlQueryModel *getStashModel() { return &m_stashTableModel; }
     QAbstractItemModel *getItemModel() { return &m_itemModel; }
@@ -89,22 +97,7 @@ private slots:
                              const std::vector<poe::Character> &characters,
                              const QByteArray &data);
 
-    void handleCharacter(const QString &realm,
-                         const QString &name,
-                         const std::optional<poe::Character> &character,
-                         const QByteArray &data);
-
-    void handleStashList(const QString &realm,
-                         const QString &league,
-                         const std::vector<poe::StashTab> &stashes,
-                         const QByteArray &data);
-
-    void handleStash(const QString &realm,
-                     const QString &league,
-                     const QString &stash_id,
-                     const QString &substash_id,
-                     const std::optional<poe::StashTab> &stash,
-                     const QByteArray &data);
+    //void handleStashList(const QString &realm, const QString &league, const poe::StashTab &stashes);
 
     void rateLimited(int seconds, const QString &policy_name);
 
@@ -115,9 +108,12 @@ private:
     RateLimiter m_rateLimiter;
     PoeClient m_client;
 
+    ItemTooltip m_tooltip;
+
     std::unique_ptr<UserStore> m_clientStore;
 
     TreeModel m_itemModel;
+    QItemSelectionModel m_itemSelectionModel;
     QSqlQueryModel m_characterTableModel;
     QSqlQueryModel m_stashTableModel;
 
@@ -128,6 +124,8 @@ private:
     QString m_league;
     QString m_character;
     QString m_rateLimitStatus;
+
+    QString m_selectedItemImageUrl;
 
     std::vector<poe::League> m_leagueList;
     std::vector<poe::Character> m_characterList;
