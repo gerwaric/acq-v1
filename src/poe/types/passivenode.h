@@ -23,14 +23,15 @@ namespace poe {
 
         struct ClusterJewel
         {
+            // WARNING: TODO: the proxy and parent fields are supposed to be ?uint, but the api return strings
             std::optional<unsigned> size;   // ? uint
             std::optional<unsigned> index;  // ? uint
-            std::optional<unsigned> proxy;  // ? uint the proxy node identifier
-            std::optional<unsigned> parent; // ? uint the parent node identifier
+            std::optional<QString> proxy;   // ? uint the proxy node identifier
+            std::optional<QString> parent;  // ? uint the parent node identifier
         };
 
-        std::optional<unsigned> skill;            // ? uint skill hash
-        std::optional<QString> name;              // ? string
+        std::optional<QString> skill; // ? uint skill hash TODO: WARNING: supposed to be a ?uint
+        std::optional<QString> name;  // ? string
         std::optional<QString> icon;              // ? string
         std::optional<bool> isKeystone;           // ? bool always true if present
         std::optional<bool> isNotable;            // ? bool always true if present

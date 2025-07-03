@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Acquisition
+import Acquisition.qml
 
 Item {
     id: itemsTab
@@ -37,6 +38,7 @@ Item {
 
             Item {
                 Layout.fillHeight: true
+                Layout.fillWidth: true
                 Layout.columnSpan: 2
             }
 
@@ -44,7 +46,7 @@ Item {
 
         ColumnLayout {
             Layout.fillHeight: true
-            Layout.minimumWidth: 200
+            Layout.fillWidth: true
 
             HorizontalHeaderView {
                 id: itemsHeader
@@ -56,14 +58,17 @@ Item {
 
             TreeView {
                 id: itemsView
-                Layout.fillHeight: true
                 Layout.fillWidth: true
+                Layout.fillHeight: true
 
                 clip: true
                 boundsMovement: Flickable.StopAtBounds
 
                 model: App.itemsModel
-                selectionModel: App.itemSelectionModel
+
+                selectionModel: ItemSelectionModel {
+                    model: itemsView.model
+                }
 
                 delegate: TreeViewDelegate {}
 
@@ -73,36 +78,14 @@ Item {
         }
 
         ColumnLayout {
-            Layout.minimumWidth: 200
+            Layout.preferredWidth: 100
+            Layout.fillHeight: true
 
-            RowLayout {
-
-                Image {
-                    id: itemHeaderLeft
-                }
-
-                ColumnLayout {
-                    id: center
-
-                    Label {
-                        text: App.itemTooltip.itemNameFirstLine
-                    }
-
-                    Label {
-                        text: App.itemTooltip.itemNameSecondLine
-                    }
-                }
-
-                Image {
-                    id: itemHeaderRight
-                }
-
+            Image {
+                id: itemImage
+                anchors.right: parent.right
+                fillMode: Image.PreserveAspectFit
             }
-
-            Label {
-                id: properties
-            }
-
         }
     }
 }

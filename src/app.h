@@ -72,7 +72,7 @@ public:
 
     // property getters
     QItemSelectionModel *getItemSelectionModel() { return &m_itemSelectionModel; }
-    ItemTooltip *getItemTooltip() { return &m_tooltip; }
+    ItemTooltip *getItemTooltip() { return &m_itemTooltip; }
     QSqlQueryModel *getCharacterModel() { return &m_characterTableModel; }
     QSqlQueryModel *getStashModel() { return &m_stashTableModel; }
     QAbstractItemModel *getItemModel() { return &m_itemModel; }
@@ -108,12 +108,12 @@ private:
     RateLimiter m_rateLimiter;
     PoeClient m_client;
 
-    ItemTooltip m_tooltip;
-
     std::unique_ptr<UserStore> m_clientStore;
 
     TreeModel m_itemModel;
+    ItemTooltip m_itemTooltip;
     QItemSelectionModel m_itemSelectionModel;
+
     QSqlQueryModel m_characterTableModel;
     QSqlQueryModel m_stashTableModel;
 

@@ -76,9 +76,11 @@ namespace poe {
 
         struct CrucibleInfo
         {
+            // TODO: WARNING: The nodes field is supposed to be an unordered_map,
+            // but there's any issue with how php handles this field according to novynn, which
+            // can cause it to be an array.
             QString layout; // string URL to an image of the tree layout
-            std::unordered_map<QString, CrucibleNode>
-                nodes; // dictionary of CrucibleNode the key is the string value of the node index
+            std::variant<std::vector<CrucibleNode>, std::unordered_map<QString, CrucibleNode>> nodes;
         };
 
         struct HybridInfo

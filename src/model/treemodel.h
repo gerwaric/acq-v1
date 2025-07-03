@@ -4,7 +4,7 @@
 #pragma once
 
 #include "model/iteminfo.h"
-#include "model/rootnode.h"
+#include "model/treenode.h"
 #include <poe/types/character.h>
 #include <poe/types/stashtab.h>
 
@@ -54,15 +54,17 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
     inline const TreeNode* getNode(const QModelIndex& index) const {
-        return index.isValid() ? static_cast<TreeNode*>(index.internalPointer()) : &m_root;
+        return index.isValid() && index.internalPointer()
+                   ? static_cast<TreeNode *>(index.internalPointer())
+                   : &m_root;
     }
 
 public slots:
-    void loadStash(const poe::StashTab &stash);
-    void loadCharacter(const poe::Character &character);
+    void addStash(const poe::StashTab &stash);
+    void addCharacter(const poe::Character &character);
 
 private:
-    RootNode m_root;
-    TreeNode &m_characters;
-    TreeNode &m_stashes;
+    TreeNode m_root;
+    TreeNode &m_characterRoot;
+    TreeNode &m_stashRoot;
 };

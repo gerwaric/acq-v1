@@ -3,6 +3,14 @@
 
 #include "itemtooltip.h"
 
-ItemTooltip::ItemTooltip(QObject *parent)
+ItemTooltip::ItemTooltip(TreeModel &model, QObject *parent)
     : QObject(parent)
+    , m_model(model)
 {}
+
+void ItemTooltip::onItemChanged(const QModelIndex &current, const QModelIndex &previous)
+{
+    const auto *node = m_model.getNode(current);
+
+    m_itemNameFirstLine = "Ues";
+}

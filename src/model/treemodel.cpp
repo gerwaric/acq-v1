@@ -2,16 +2,13 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "model/treemodel.h"
-
-#include "model/characternode.h"
-#include "model/iteminfo.h"
-#include "model/stashnode.h"
+#include "model/treenode.h"
 
 TreeModel::TreeModel(QObject *parent)
-    : QAbstractItemModel(parent)
-    , m_root("Root")
-    , m_characters(m_root.addChild<RootNode>("Characters"))
-    , m_stashes(m_root.addChild<RootNode>("Stash Tabs"))
+    : QAbstractItemModel{parent}
+    , m_root{"Root", nullptr}
+    , m_characterRoot{m_root.addChild("Characters")}
+    , m_stashRoot{m_root.addChild("Stash Tabs")}
 {}
 
 QModelIndex TreeModel::index(int row, int column, const QModelIndex& parent) const
@@ -49,20 +46,22 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
     return QVariant();
 }
 
-void TreeModel::loadCharacter(const poe::Character &character)
+void TreeModel::addCharacter(const poe::Character &character)
 {
-    const int k = m_characters.childCount();
-    const QModelIndex parent_index = createIndex(0, 0, &m_characters);
-    beginInsertRows(parent_index, k, k);
-    m_characters.addChild<CharacterNode>(character);
+    const int k = m_characterRoot.childCount();
+    const QModelIndex index = createIndex(0, 0, &m_characterRoot);
+
+    beginInsertRows(index, k, k);
+    m_characterRoot.addChild(character);
     endInsertRows();
 }
 
-void TreeModel::loadStash(const poe::StashTab &stash)
+void TreeModel::addStash(const poe::StashTab &stash)
 {
-    const int k = m_stashes.childCount();
-    const QModelIndex parent_index = createIndex(0, 0, &m_stashes);
-    beginInsertRows(parent_index, k, k);
-    m_stashes.addChild<StashNode>(stash);
+    const int k = m_stashRoot.childCount();
+    const QModelIndex index = createIndex(0, 0, &m_stashRoot);
+
+    beginInsertRows(index, k, k);
+    m_stashRoot.addChild(stash);
     endInsertRows();
 }

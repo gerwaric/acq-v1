@@ -25,18 +25,18 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     # Item Model
     model/characterinfo.cpp
     model/characterinfo.h
-    model/characternode.cpp
-    model/characternode.h
+    #model/characternode.cpp
+    #model/characternode.h
     model/iteminfo.cpp
     model/iteminfo.h
-    model/itemnode.cpp
-    model/itemnode.h
-    model/rootnode.cpp
-    model/rootnode.h
+    #model/itemnode.cpp
+    #model/itemnode.h
+    #model/rootnode.cpp
+    #model/rootnode.h
     model/stashinfo.cpp
     model/stashinfo.h
-    model/stashnode.cpp
-    model/stashnode.h
+    #model/stashnode.cpp
+    #model/stashnode.h
     model/treemodel.cpp
     model/treemodel.h
     model/treenode.cpp
@@ -101,39 +101,9 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     ratelimit/ratelimitpolicy.h
 )
 
-#[[
-qt_add_qml_module(acquisition
-    URI "Acquisition"
-    QML_FILES
-        main.qml
-        qml/CharactersTab.qml
-        qml/ItemsTab.qml
-        qml/ItemTooltip.qml
-        qml/MainTabs.qml
-        qml/SettingsTab.qml
-        qml/StashesTab.qml
-)
-#]]
+add_subdirectory(qml)
 
 target_include_directories(acquisition PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-# Generate version.h
-configure_file(
-    ${CMAKE_SOURCE_DIR}/config/app_version.h.in
-    ${CMAKE_CURRENT_BINARY_DIR}/generated/app_version.h
-    @ONLY
-)
-
-# Generate versioninfo.rc
-configure_file(
-    ${CMAKE_SOURCE_DIR}/config/app_versioninfo.rc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/generated/app_versioninfo.rc
-    @ONLY
-)
-
-# Add generated header directory to include path
-add_library(version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated/app_version.h)
-target_include_directories(version INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 # Link everything into acquisition
 target_link_libraries(acquisition
@@ -150,7 +120,8 @@ target_link_libraries(acquisition
     glaze::glaze
     spdlog::spdlog
     # Internal Libraries
-    version
+    acquisition_assets
+    acquisition_config
 )
 
 if(APPLE)

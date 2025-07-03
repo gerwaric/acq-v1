@@ -15,12 +15,13 @@ App::App(QObject *parent)
     : QObject(parent)
     , m_oauthManager(m_networkManager)
     , m_rateLimiter(m_networkManager)
+    , m_itemTooltip(m_itemModel)
     , m_itemSelectionModel(&m_itemModel)
 {
     connect(&m_oauthManager, &OAuthManager::grantAccess, this, &App::accessGranted);
     connect(&m_rateLimiter, &RateLimiter::Paused, this, &App::rateLimited);
     connect(&m_client, &PoeClient::requestReady, &m_rateLimiter, &RateLimiter::makeRequest);
-    connect(&m_itemSelectionModel, &QItemSelectionModel::currentChanged, this, &App::onItemSelected);
+    //connect(&m_itemSelectionModel, &QItemSelectionModel::currentChanged, this, &App::onItemSelected);
 
     // Look for an existing username.
     const QString username = m_globalStore.get("last_username").toString();
@@ -200,8 +201,8 @@ void App::accessGranted(const OAuthToken &token)
     m_clientStore->connectTo(m_client);
 
     auto *client = m_clientStore.get();
-    connect(client, &UserStore::characterReady, &m_itemModel, &TreeModel::loadCharacter);
-    connect(client, &UserStore::stashReady, &m_itemModel, &TreeModel::loadStash);
+    connect(client, &UserStore::characterReady, &m_itemModel, &TreeModel::addCharacter);
+    connect(client, &UserStore::stashReady, &m_itemModel, &TreeModel::addStash);
 
     QSqlDatabase db = m_clientStore->getDatabase();
     m_characterTableModel.setQuery("SELECT name, realm, league, timestamp FROM characters", db);

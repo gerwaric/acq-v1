@@ -3,13 +3,14 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 
-import Acquisition
-
 Item {
+    anchors.fill: parent
 
     ColumnLayout {
+        spacing: 0
 
         RowLayout {
+            Layout.fillWidth: true
 
             Image {
                 id: itemHeaderLeft
@@ -19,11 +20,12 @@ Item {
                 id: center
 
                 Label {
-                    text: App.itemTooltip.itemNameFirstLine
+                    id: itemNameFirstLine
+
                 }
 
                 Label {
-                    text: App.itemTooltip.itemNameSecondLine
+                    id: itemNameSecondLine
                 }
             }
 

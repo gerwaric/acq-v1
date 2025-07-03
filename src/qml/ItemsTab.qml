@@ -3,7 +3,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 import Acquisition
-import Acquisition.qml
 
 Item {
     id: itemsTab
@@ -38,7 +37,6 @@ Item {
 
             Item {
                 Layout.fillHeight: true
-                Layout.fillWidth: true
                 Layout.columnSpan: 2
             }
 
@@ -46,7 +44,7 @@ Item {
 
         ColumnLayout {
             Layout.fillHeight: true
-            Layout.fillWidth: true
+            Layout.minimumWidth: 200
 
             HorizontalHeaderView {
                 id: itemsHeader
@@ -58,17 +56,14 @@ Item {
 
             TreeView {
                 id: itemsView
-                Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.fillWidth: true
 
                 clip: true
                 boundsMovement: Flickable.StopAtBounds
 
                 model: App.itemsModel
-
-                selectionModel: ItemSelectionModel {
-                    model: itemsView.model
-                }
+                selectionModel: App.itemSelectionModel
 
                 delegate: TreeViewDelegate {}
 
@@ -78,14 +73,36 @@ Item {
         }
 
         ColumnLayout {
-            Layout.preferredWidth: 100
-            Layout.fillHeight: true
+            Layout.minimumWidth: 200
 
-            Image {
-                id: itemImage
-                anchors.right: parent.right
-                fillMode: Image.PreserveAspectFit
+            RowLayout {
+
+                Image {
+                    id: itemHeaderLeft
+                }
+
+                ColumnLayout {
+                    id: center
+
+                    Label {
+                        text: App.itemTooltip.itemNameFirstLine
+                    }
+
+                    Label {
+                        text: App.itemTooltip.itemNameSecondLine
+                    }
+                }
+
+                Image {
+                    id: itemHeaderRight
+                }
+
             }
+
+            Label {
+                id: properties
+            }
+
         }
     }
 }

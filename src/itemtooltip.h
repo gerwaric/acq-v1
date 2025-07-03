@@ -3,6 +3,9 @@
 
 #pragma once
 
+#include "model/treemodel.h"
+
+#include <QModelIndex>
 #include <QObject>
 
 #include <QtQmlIntegration/qqmlintegration.h>
@@ -16,7 +19,7 @@ class ItemTooltip : public QObject
     Q_PROPERTY(QString itemNameSecondLine READ getItemNameSecondLine NOTIFY tooltipChanged)
 
 public:
-    explicit ItemTooltip(QObject *parent = nullptr);
+    explicit ItemTooltip(TreeModel &model, QObject *parent = nullptr);
 
     QString getItemNameFirstLine() const { return m_itemNameFirstLine; }
     QString getItemNameSecondLine() const { return m_itemNameSecondLine; }
@@ -25,9 +28,10 @@ signals:
     void tooltipChanged();
 
 public slots:
-    void onItemChanged();
+    void onItemChanged(const QModelIndex &current, const QModelIndex &previous);
 
 private:
+    TreeModel &m_model;
     QString m_itemNameFirstLine{"First"};
     QString m_itemNameSecondLine{"Second"};
 };
