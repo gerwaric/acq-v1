@@ -5,13 +5,15 @@
 
 #include "util/spdlog_qt.h"
 
+static_assert(ACQUISITION_USE_SPDLOG);
+
 ItemInfo::ItemInfo(const poe::Item& item)
 {
     id = item.id.value_or("");
     name = item.name;
     typeLine = item.typeLine;
     baseType = item.baseType;
-    itemRarity = item.frameType;
+    frameType = item.frameType;
 
     if (name.isEmpty()) {
         prettyName = typeLine;
@@ -19,9 +21,23 @@ ItemInfo::ItemInfo(const poe::Item& item)
         prettyName = name + " " + typeLine;
     }
 
+    w = item.w;
+    h = item.h;
+    icon = item.icon;
+
     loadSockets(item, *this);
     loadProperties(item, *this);
     loadRequirements(item, *this);
+
+    if (item.influences) {
+        const auto &influences = item.influences.value();
+        shaper = influences.shaper.value_or(false);
+        elder = influences.elder.value_or(false);
+        crusader = influences.crusader.value_or(false);
+        redeemer = influences.redeemer.value_or(false);
+        hunter = influences.hunter.value_or(false);
+        warlord = influences.warlord.value_or(false);
+    }
 
     //bool transigured_gem;
     if (item.hybrid) {

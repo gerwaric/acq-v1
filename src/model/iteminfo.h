@@ -53,7 +53,12 @@ struct ItemInfo
     QString prettyName;
     QString baseType;
     QString itemCategory;
-    poe::FrameType itemRarity;
+    QString icon;
+
+    poe::FrameType frameType;
+
+    unsigned w{0};
+    unsigned h{0};
 
     float damage{0.0};
     float criticalChance{0.0};
@@ -107,6 +112,14 @@ struct ItemInfo
     int itemLevel{0};
     int gemLevel{0};
     int gemExperience{0};
+
+    // Influences
+    bool shaper{false};
+    bool elder{false};
+    bool crusader{false};
+    bool redeemer{false};
+    bool hunter{false};
+    bool warlord{false};
 
     bool transiguredGem{false};
     bool vaalGem{false};
@@ -168,7 +181,7 @@ struct glz::meta<ItemInfo> {
         &ItemInfo::prettyName, "prettyName",
         &ItemInfo::baseType, "baseType",
         &ItemInfo::itemCategory, "itemCategory",
-        &ItemInfo::itemRarity, "itemRarity",
+        &ItemInfo::frameType, "frameType",
         
         &ItemInfo::damage, "damage",
         &ItemInfo::criticalChance, "criticalChance",

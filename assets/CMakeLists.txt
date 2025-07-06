@@ -1,10 +1,9 @@
 # Copyright (C) 2025 Tom Holz.
 # SPDX-License-Identifier: GPL-3.0-only
 
-qt_add_library(acquisition_assets INTERFACE)
+qt_add_library(acquisition_assets STATIC)
 
 qt_add_resources(acquisition_assets "resources"
-    BASE "assets"
     FILES
     # Fonts
     fonts/Fontin-SmallCaps.ttf

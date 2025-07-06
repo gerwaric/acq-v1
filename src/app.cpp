@@ -12,16 +12,18 @@
 static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Qt Creator.
 
 App::App(QObject *parent)
-    : QObject(parent)
-    , m_oauthManager(m_networkManager)
-    , m_rateLimiter(m_networkManager)
-    , m_itemTooltip(m_itemModel)
-    , m_itemSelectionModel(&m_itemModel)
+    : QObject{parent}
+    , m_oauthManager{m_networkManager}
+    , m_rateLimiter{m_networkManager}
+    , m_itemSelectionModel{&m_itemModel}
 {
     connect(&m_oauthManager, &OAuthManager::grantAccess, this, &App::accessGranted);
     connect(&m_rateLimiter, &RateLimiter::Paused, this, &App::rateLimited);
     connect(&m_client, &PoeClient::requestReady, &m_rateLimiter, &RateLimiter::makeRequest);
-    //connect(&m_itemSelectionModel, &QItemSelectionModel::currentChanged, this, &App::onItemSelected);
+    connect(&m_itemSelectionModel,
+            &QItemSelectionModel::currentChanged,
+            this,
+            &App::selectionChanged);
 
     // Look for an existing username.
     const QString username = m_globalStore.get("last_username").toString();
@@ -243,4 +245,26 @@ void App::loadSelectedCharacters()
 void App::loadSelectedStashes()
 {
     //m_userStore->loadStashes(m_realm, m_league);
+}
+
+void App::selectionChanged(const QModelIndex &current, const QModelIndex &previous)
+{
+    if (!current.isValid()) {
+        spdlog::warn("App: the seelction changed but the current index is invalid.");
+        return;
+    }
+
+    const auto node = m_itemModel.getNode(current);
+
+    if (!node) {
+        spdlog::warn("App: the selection changed but the node is invalid.");
+        return;
+    }
+
+    if (node->isItem()) {
+        const auto &payload = node->payload();
+        const auto &item_info = std::get<ItemInfo>(payload);
+        m_tooltip = std::make_unique<ItemTooltip>(item_info);
+        emit tooltipChanged();
+    }
 }

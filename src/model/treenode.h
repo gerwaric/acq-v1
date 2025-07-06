@@ -32,6 +32,8 @@ public:
     inline constexpr bool isStash() const { return hasPayload<StashInfo>(); }
     inline constexpr bool isItem() const { return hasPayload<ItemInfo>(); }
 
+    inline const Payload &payload() const { return m_payload; }
+
     template<typename T>
     TreeNode &addChild(const T &object)
     {

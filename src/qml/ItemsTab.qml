@@ -72,37 +72,6 @@ Item {
             }
         }
 
-        ColumnLayout {
-            Layout.minimumWidth: 200
-
-            RowLayout {
-
-                Image {
-                    id: itemHeaderLeft
-                }
-
-                ColumnLayout {
-                    id: center
-
-                    Label {
-                        text: App.itemTooltip.itemNameFirstLine
-                    }
-
-                    Label {
-                        text: App.itemTooltip.itemNameSecondLine
-                    }
-                }
-
-                Image {
-                    id: itemHeaderRight
-                }
-
-            }
-
-            Label {
-                id: properties
-            }
-
-        }
+        ItemTooltip {}
     }
 }

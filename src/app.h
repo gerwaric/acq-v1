@@ -16,6 +16,7 @@
 
 #include <QAbstractItemModel>
 #include <QItemSelectionModel>
+#include <QModelIndex>
 #include <QObject>
 #include <QSqlQueryModel>
 #include <QSqlTableModel>
@@ -39,11 +40,12 @@ class App : public QObject
     Q_PROPERTY(bool isAuthenticated READ isAuthenticated NOTIFY authenticationStateChanged)
     Q_PROPERTY(QString username READ getUsername NOTIFY authenticationStateChanged)
 
-    Q_PROPERTY(QItemSelectionModel *itemSelectionModel READ getItemSelectionModel CONSTANT)
-    Q_PROPERTY(ItemTooltip *itemTooltip READ getItemTooltip CONSTANT)
     Q_PROPERTY(QSqlQueryModel *characterModel READ getCharacterModel CONSTANT)
     Q_PROPERTY(QAbstractItemModel *stashModel READ getStashModel CONSTANT)
     Q_PROPERTY(QAbstractItemModel *itemsModel READ getItemModel CONSTANT)
+    Q_PROPERTY(QItemSelectionModel *itemSelectionModel READ getItemSelectionModel CONSTANT)
+
+    Q_PROPERTY(ItemTooltip *tooltip READ getItemTooltip NOTIFY tooltipChanged)
 
 public:
     App(QObject *parent = nullptr);
@@ -70,24 +72,27 @@ public:
     QStringList getStashNames() const;
     QString getSelectedItemIconUrl() const { return m_selectedItemImageUrl; }
 
-    // property getters
     QItemSelectionModel *getItemSelectionModel() { return &m_itemSelectionModel; }
-    ItemTooltip *getItemTooltip() { return &m_itemTooltip; }
     QSqlQueryModel *getCharacterModel() { return &m_characterTableModel; }
     QSqlQueryModel *getStashModel() { return &m_stashTableModel; }
     QAbstractItemModel *getItemModel() { return &m_itemModel; }
 
+    ItemTooltip *getItemTooltip() { return m_tooltip.get(); }
+
 signals:
     void logLevelChanged();
     void authenticationStateChanged();
+    void rateLimitStatusChanged();
+    void tooltipChanged();
 
     void leaguesUpdated();
     void charactersUpdated();
     void stashesUpdated();
-    void rateLimitStatusChanged();
 
 private slots:
     void accessGranted(const OAuthToken &token);
+
+    void selectionChanged(const QModelIndex &current, const QModelIndex &previous);
 
     void handleLeagueList(const QString &realm,
                           const std::vector<poe::League> &leagues,
@@ -111,8 +116,8 @@ private:
     std::unique_ptr<UserStore> m_clientStore;
 
     TreeModel m_itemModel;
-    ItemTooltip m_itemTooltip;
     QItemSelectionModel m_itemSelectionModel;
+    std::unique_ptr<ItemTooltip> m_tooltip;
 
     QSqlQueryModel m_characterTableModel;
     QSqlQueryModel m_stashTableModel;

@@ -11,6 +11,8 @@ static_assert(ACQUISITION_USE_SPDLOG);
 #include <QQmlApplicationEngine>
 
 #include <QDir>
+#include <QFontDatabase>
+#include <QResource>
 #include <QString>
 #include <QUrl>
 
@@ -46,8 +48,16 @@ int main(int argc, char *argv[])
     // Set the default logging level before we do anything.
     spdlog::set_level(DEFAULT_LOG_LEVEL);
 
+    dumpQrcDirectory(":/fonts");
+    //return -1;
+
+    //QStringList families = QFontDatabase::applicationFontFamilies(id);
+    //qDebug() << "Registered font families:" << families;
+
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
+
+    int id = QFontDatabase::addApplicationFont(":/fonts/Fontin-SmallCaps.ttf");
 
     // Force constrution of the App here.
     engine.singletonInstance<App *>("Acquisition", "App");
