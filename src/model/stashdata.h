@@ -9,9 +9,9 @@
 
 #include <optional>
 
-struct StashInfo
+struct StashData
 {
-    StashInfo(const poe::StashTab &stash);
+    StashData(const poe::StashTab &stash);
 
     QString id;
     std::optional<QString> parent;

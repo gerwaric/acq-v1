@@ -14,7 +14,7 @@ TreeNode::TreeNode(const QString &name, TreeNode *parent)
 TreeNode::TreeNode(const poe::Character &character, TreeNode *parent)
     : TreeNode{character.name, parent}
 {
-    m_payload = CharacterInfo{character};
+    m_payload = CharacterData{character};
 
     if (character.equipment) {
         addCollection("Equipment", character.equipment.value());
@@ -33,7 +33,7 @@ TreeNode::TreeNode(const poe::Character &character, TreeNode *parent)
 TreeNode::TreeNode(const poe::StashTab &stash, TreeNode *parent)
     : TreeNode{stash.name, parent}
 {
-    m_payload = StashInfo{stash};
+    m_payload = StashData{stash};
 
     if (stash.items) {
         addChildren(stash.items.value());
@@ -43,7 +43,7 @@ TreeNode::TreeNode(const poe::StashTab &stash, TreeNode *parent)
 TreeNode::TreeNode(const poe::Item &item, TreeNode *parent)
     : TreeNode{item.name + (item.name.isEmpty() ? "" : " ") + item.typeLine, parent}
 {
-    m_payload = ItemInfo{item};
+    m_payload = ItemData{item};
 
     if (item.socketedItems) {
         addChildren(item.socketedItems.value());

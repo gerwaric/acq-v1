@@ -25,6 +25,8 @@ namespace poe {
         std::optional<double> progress;               // ? double rounded to 2 decimal places
         std::optional<ItemProperty::Type> type;       // ? uint
         std::optional<QString> suffix;                // ? string
+
+        QString render() const;
     };
 
 } // namespace poe

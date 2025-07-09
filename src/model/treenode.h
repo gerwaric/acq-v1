@@ -3,11 +3,13 @@
 
 #pragma once
 
-#include "characterinfo.h"
-#include "iteminfo.h"
-#include "stashinfo.h"
+#include "characterdata.h"
+#include "itemdata.h"
+#include "stashdata.h"
 
 #include "util/spdlog_qt.h"
+
+static_assert(ACQUISITION_USE_SPDLOG);
 
 #include <QString>
 #include <QVariant>
@@ -17,7 +19,7 @@
 
 class TreeNode {
 public:
-    using Payload = std::variant<std::monostate, CharacterInfo, StashInfo, ItemInfo>;
+    using Payload = std::variant<std::monostate, CharacterData, StashData, ItemData>;
 
     explicit TreeNode(const QString &name, TreeNode *parent);
 
@@ -28,9 +30,9 @@ public:
     }
 
     inline constexpr bool isRoot() const { return hasPayload<std::monostate>(); }
-    inline constexpr bool isCharacter() const { return hasPayload<CharacterInfo>(); }
-    inline constexpr bool isStash() const { return hasPayload<StashInfo>(); }
-    inline constexpr bool isItem() const { return hasPayload<ItemInfo>(); }
+    inline constexpr bool isCharacter() const { return hasPayload<CharacterData>(); }
+    inline constexpr bool isStash() const { return hasPayload<StashData>(); }
+    inline constexpr bool isItem() const { return hasPayload<ItemData>(); }
 
     inline const Payload &payload() const { return m_payload; }
 
@@ -53,14 +55,14 @@ public:
     inline bool hasChildren() const { return !m_children.empty(); }
     inline int childCount() const { return static_cast<int>(m_children.size()); }
     inline int row() const { return m_parent ? m_parent->rowOfChild(this) : 0; }
-    inline int columnCount() const { return isItem() ? ItemInfo::ColumnCount : 1; }
+    inline int columnCount() const { return isItem() ? ItemData::ColumnCount : 1; }
 
     QVariant data(int column) const
     {
         if (isItem()) {
-            if ((column >= 0) && (column < ItemInfo::ColumnCount)) {
-                const auto &column_info = ItemInfo::Columns[column];
-                const auto item_info = std::get<ItemInfo>(m_payload);
+            if ((column >= 0) && (column < ItemData::ColumnCount)) {
+                const auto &column_info = ItemData::Columns[column];
+                const auto item_info = std::get<ItemData>(m_payload);
                 return column_info.getter(item_info);
             }
         }

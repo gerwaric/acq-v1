@@ -13,6 +13,8 @@ static_assert(ACQUISITION_USE_SPDLOG); // Prevents an unused header warning in Q
 #include <QSqlQuery>
 #include <QStandardPaths>
 
+constexpr auto JSON_MODE = json::Mode::Strict;
+
 // Cannot declare these structures in an anonymous namespace
 // because glaze needs to use them.
 
@@ -126,7 +128,7 @@ std::vector<poe::League> UserStore::getLeagueList(const QString &realm)
 {
     poe::LeagueListWrapper wrapper;
     const QByteArray data = getIndex("leagues", realm, "");
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing leagues index");
         return {};
@@ -138,7 +140,7 @@ std::vector<poe::Character> UserStore::getCharacterList(const QString &realm)
 {
     poe::CharacterListWrapper wrapper;
     const QByteArray data = getIndex("characters", realm, "");
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing character list");
         return {};
@@ -150,7 +152,7 @@ std::vector<poe::StashTab> UserStore::getStashList(const QString &realm, const Q
 {
     poe::StashListWrapper wrapper;
     const QByteArray data = getIndex("stashes", realm, league);
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing stash index");
         return {};
@@ -182,7 +184,7 @@ std::optional<poe::Character> UserStore::getCharacter(const QString &realm, cons
 
     poe::CharacterWrapper wrapper;
     const QByteArray data = query.value(0).toByteArray();
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing character wrapper");
         return {};
@@ -219,7 +221,7 @@ std::optional<poe::StashTab> UserStore::getStash(const QString &realm,
 
     poe::StashWrapper wrapper;
     const QByteArray data = query.value(0).toByteArray();
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing character wrapper");
         return {};
@@ -250,7 +252,7 @@ void UserStore::loadLeagueList(const QString &realm)
 
     poe::LeagueListWrapper wrapper;
     const QByteArray data = query.value(0).toByteArray();
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing league list");
         return;
@@ -282,7 +284,7 @@ void UserStore::loadCharacterList(const QString &realm)
 
     poe::CharacterListWrapper wrapper;
     const QByteArray data = query.value(0).toByteArray();
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing character list");
         return;
@@ -313,7 +315,7 @@ void UserStore::loadCharacters(const QString &realm, const QString &league)
     while (query.next()) {
         poe::CharacterWrapper wrapper;
         const QByteArray data = query.value(0).toByteArray();
-        const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+        const bool ok = json::parse_into(wrapper, data, JSON_MODE);
         if (!ok) {
             spdlog::error("UserData: error parsing character");
         } else if (!wrapper.character) {
@@ -356,7 +358,7 @@ void UserStore::loadStashList(const QString &realm, const QString &league)
 
     poe::StashListWrapper wrapper;
     const QByteArray data = query.value(0).toByteArray();
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing stash list");
         return;
@@ -388,7 +390,7 @@ void UserStore::loadStashes(const QString &realm, const QString &league)
     while (query.next()) {
         poe::StashWrapper wrapper;
         const QByteArray data = query.value(0).toByteArray();
-        const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+        const bool ok = json::parse_into(wrapper, data, JSON_MODE);
         if (!ok) {
             spdlog::error("UserStore: error parsing stash tab");
         } else if (!wrapper.stash) {
@@ -402,7 +404,7 @@ void UserStore::loadStashes(const QString &realm, const QString &league)
 void UserStore::storeLeagueListData(const QString &realm, const QByteArray &data)
 {
     poe::LeagueListWrapper wrapper;
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing league list wrapper.");
         return;
@@ -414,7 +416,7 @@ void UserStore::storeLeagueListData(const QString &realm, const QByteArray &data
 void UserStore::storeCharacterListData(const QString &realm, const QByteArray &data)
 {
     poe::CharacterListWrapper wrapper;
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing character list wrapper.");
         return;
@@ -428,7 +430,7 @@ void UserStore::storeStashListData(const QString &realm,
                                    const QByteArray &data)
 {
     poe::StashListWrapper wrapper;
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing stash list wrapper.");
         return;
@@ -440,7 +442,7 @@ void UserStore::storeStashListData(const QString &realm,
 void UserStore::storeCharacterData(const QString &realm, const QString &name, const QByteArray &data)
 {
     poe::CharacterWrapper wrapper;
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserData: error parsing character data before saving");
         return;
@@ -494,7 +496,7 @@ void UserStore::storeStashData(const QString &realm,
                                const QByteArray &data)
 {
     poe::StashWrapper wrapper;
-    const bool ok = json::parse_into(wrapper, data, json::Mode::Permissive);
+    const bool ok = json::parse_into(wrapper, data, JSON_MODE);
     if (!ok) {
         spdlog::error("UserStore: error parsing stash before saving.");
         return;

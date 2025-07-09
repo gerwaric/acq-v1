@@ -7,9 +7,9 @@
 
 #include <QString>
 
-struct CharacterInfo
+struct CharacterData
 {
-    CharacterInfo(const poe::Character &character);
+    CharacterData(const poe::Character &character);
 
     QString id;
     QString name;

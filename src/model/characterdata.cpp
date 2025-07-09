@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Tom Holz.
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "model/characterinfo.h"
+#include "model/characterdata.h"
 
-CharacterInfo::CharacterInfo(const poe::Character &character)
+CharacterData::CharacterData(const poe::Character &character)
 {
     id = character.id;
     name = character.name;

@@ -24,13 +24,20 @@ namespace poe {
         {
             struct Map
             {
-                unsigned series;
+                QString section;
+                QString name;
+                QString image;
+                int tier;
+                int series;
+                int index;
             };
 
             std::optional<bool> public_; // ? bool always true if present
             std::optional<bool> folder;  // ? bool always true if present
             std::optional<QString>
                 colour; // ? string 6 digit hex colour (NOTE: might be only 2 or 4 characters).
+            glz::raw_json layout;             // TODO: undocumented!
+            std::optional<int> items;         // TODO: undocumented!
             poe::StashTab::Metadata::Map map; // TODO: undocumented!
         };
 
@@ -68,12 +75,13 @@ template<>
 struct glz::meta<poe::StashTab::Metadata>
 {
     // clang-format off
-    using T = poe::StashTab::Metadata;
     static constexpr auto value = glz::object(
-        "public", &T::public_,
-        "folder", &T::folder,
-        "colour", &T::colour,
-        "map",    &T::map
+        "public", &poe::StashTab::Metadata::public_,
+        "folder", &poe::StashTab::Metadata::folder,
+        "colour", &poe::StashTab::Metadata::colour,
+        "layout", &poe::StashTab::Metadata::layout,
+        "items",  &poe::StashTab::Metadata::items,
+        "map",    &poe::StashTab::Metadata::map
     );
     // clang-format on
 };

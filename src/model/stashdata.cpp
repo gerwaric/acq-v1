@@ -1,9 +1,9 @@
 // Copyright (C) 2025 Tom Holz.
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "model/stashinfo.h"
+#include "model/stashdata.h"
 
-StashInfo::StashInfo(const poe::StashTab &stash)
+StashData::StashData(const poe::StashTab &stash)
 {
     id = stash.id;
     parent = stash.parent;

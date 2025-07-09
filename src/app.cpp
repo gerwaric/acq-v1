@@ -263,8 +263,8 @@ void App::selectionChanged(const QModelIndex &current, const QModelIndex &previo
 
     if (node->isItem()) {
         const auto &payload = node->payload();
-        const auto &item_info = std::get<ItemInfo>(payload);
-        m_tooltip = std::make_unique<ItemTooltip>(item_info);
+        const auto &item = std::get<ItemData>(payload);
+        m_tooltip = std::make_unique<ItemTooltip>(item);
         emit tooltipChanged();
     }
 }

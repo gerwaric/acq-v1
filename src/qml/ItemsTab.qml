@@ -7,11 +7,12 @@ import Acquisition
 Item {
     id: itemsTab
 
-    RowLayout {
+    SplitView {
         anchors.fill: parent
 
         GridLayout {
-            Layout.minimumWidth: 200
+            SplitView.minimumWidth: 200
+            SplitView.fillHeight: true
             columns: 2
 
             Label { text: "Realm" }
@@ -43,8 +44,8 @@ Item {
         }
 
         ColumnLayout {
-            Layout.fillHeight: true
-            Layout.minimumWidth: 200
+            SplitView.fillHeight: true
+            SplitView.minimumWidth: 200
 
             HorizontalHeaderView {
                 id: itemsHeader
@@ -72,6 +73,37 @@ Item {
             }
         }
 
-        ItemTooltip {}
+        ColumnLayout {
+            visible: App.tooltip ? true : false
+            enabled: App.tooltip ? true : false
+            SplitView.minimumWidth: 400
+
+            Item {
+                id: itemImage
+                //Layout.width: itemIcon.implicitWidth
+                //Layout.height: itemIcon.implicitHeight
+                Layout.preferredWidth: itemIcon.implicitWidth
+                Layout.preferredHeight: itemIcon.implicitHeight
+
+                Image {
+                    anchors.centerIn: parent
+                    source: App.tooltip?.background
+                }
+
+                Image {
+                    id: itemIcon
+                    anchors.fill: parent
+                    source: App.tooltip?.icon
+                }
+            }
+
+            ItemTooltip {}
+
+            Item {
+                id: tooltipSpacer
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
+        }
     }
 }

@@ -8,6 +8,10 @@
 #include <poe/types/itemproperty.h>
 #include <poe/types/itemsocket.h>
 
+#include "util/glaze_qt.h"
+
+static_assert(ACQUISITION_USE_GLAZE);
+
 #include <QString>
 
 #include <optional>
@@ -58,6 +62,14 @@ namespace poe {
             unsigned tier; // uint
         };
 
+        struct FlavorTextObject
+        {
+            QString id;
+            QString type;
+            QString class_;
+        };
+        using FlavourTextItem = std::variant<std::string, FlavorTextObject>;
+
         struct IncubatingInfo
         {
             QString name;      // string
@@ -74,13 +86,16 @@ namespace poe {
             std::optional<unsigned> total;    // ? uint
         };
 
+        using CrucibleNodeList = std::vector<CrucibleNode>;
+        using CrucibleNodeMap = std::unordered_map<QString, CrucibleNode>;
+
         struct CrucibleInfo
         {
             // TODO: WARNING: The nodes field is supposed to be an unordered_map,
             // but there's any issue with how php handles this field according to novynn, which
             // can cause it to be an array.
             QString layout; // string URL to an image of the tree layout
-            std::variant<std::vector<CrucibleNode>, std::unordered_map<QString, CrucibleNode>> nodes;
+            std::variant<CrucibleNodeList, CrucibleNodeMap> nodes;
         };
 
         struct HybridInfo
@@ -144,6 +159,7 @@ namespace poe {
         std::optional<bool> split;                                // ? bool always true if present
         std::optional<bool> corrupted;                            // ? bool always true if present
         std::optional<bool> unmodifiable;                         // ? bool always true if present
+        std::optional<bool> unmodifiableExceptChaos;              // TODO: undocumented.
         std::optional<bool> cisRaceReward;                        // ? bool always true if present
         std::optional<bool> seaRaceReward;                        // ? bool always true if present
         std::optional<bool> thRaceReward;                         // ? bool always true if present
@@ -171,8 +187,8 @@ namespace poe {
         std::optional<bool> veiled;                     // ? bool always true if present
         std::optional<QString> descrText;               // ? string
         std::optional<std::vector<QString>> flavourText; // ? array of
-        // WARNING: flavourTextParsed might sometimes be an object
-        //std::optional<std::vector<QString>> flavourTextParsed; // ? array of string or object
+        // WARNING: flavourTextParsed is sometimes be an object
+        std::optional<std::vector<FlavourTextItem>> flavourTextParsed; // ? array of string or object
         std::optional<std::vector<QString>> flavourTextNote;    // ? string user - generated text
         std::optional<std::vector<QString>> prophecyText;       // ? string
         std::optional<bool> isRelic;                            // ? bool always true if present
@@ -196,3 +212,15 @@ namespace poe {
     };
 
 } // namespace poe
+
+template<>
+struct glz::meta<poe::Item::FlavorTextObject>
+{
+    // clang-format off
+    static constexpr auto value = glz::object(
+        "id",    &poe::Item::FlavorTextObject::id,
+        "type",  &poe::Item::FlavorTextObject::type,
+        "class", &poe::Item::FlavorTextObject::class_
+    );
+    // clang-format on
+};

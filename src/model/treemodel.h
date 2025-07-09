@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "model/iteminfo.h"
+#include "model/itemdata.h"
 #include "model/treenode.h"
 #include <poe/types/character.h>
 #include <poe/types/stashtab.h>
@@ -36,7 +36,7 @@ public:
     // Returns the number of columns for the children of the given parent.
     inline int columnCount(const QModelIndex &parent = QModelIndex()) const override
     {
-        return ItemInfo::ColumnCount;
+        return ItemData::ColumnCount;
     }
 
     // Returns the data stored under the given role for the item referred to by the index.

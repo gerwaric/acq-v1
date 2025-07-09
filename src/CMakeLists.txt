@@ -23,18 +23,18 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     settingsmanager.cpp
     settingsmanager.h
     # Item Model
-    model/characterinfo.cpp
-    model/characterinfo.h
+    model/characterdata.cpp
+    model/characterdata.h
     #model/characternode.cpp
     #model/characternode.h
-    model/iteminfo.cpp
-    model/iteminfo.h
+    model/itemdata.cpp
+    model/itemdata.h
     #model/itemnode.cpp
     #model/itemnode.h
     #model/rootnode.cpp
     #model/rootnode.h
-    model/stashinfo.cpp
-    model/stashinfo.h
+    model/stashdata.cpp
+    model/stashdata.h
     #model/stashnode.cpp
     #model/stashnode.h
     model/treemodel.cpp
@@ -69,6 +69,7 @@ qt_add_executable(acquisition WIN32 MACOSX_BUNDLE
     poe/types/item.h
     poe/types/itemfilter.h
     poe/types/itemjeweldata.h
+    poe/types/itemproperty.cpp
     poe/types/itemproperty.h
     poe/types/itemsocket.h
     poe/types/ladderentry.h
